@@ -19,6 +19,8 @@ import numpy as np
 #======================================================
 # Variable global
 #======================================================
+__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+LIST_PATH = os.listdir(__location__)
 HEADER=1024
 SERVER=socket.gethostbyname_ex(socket.gethostname())[-1]
 CONFIG=[]
@@ -29,11 +31,18 @@ CONFIG_CLIENT = {"AG1":[], "AG2":[], "AG3":[], "AG4":[]}
 #======================================================
 # Settings from config
 #======================================================
-f=open("./config/config.conf", "r").readlines()
-for i in f:
-    if i.find("#") == -1:
-        x=i.split("=")
-        CONFIG.append(x[1].strip("\n"))
+try:
+    if "config" in LIST_PATH:
+        __location__ = os.path.join(__location__, LIST_PATH[LIST_PATH.index("config")])
+        LIST_PATH = os.listdir(__location__)
+        with open(os.path.join(__location__, LIST_PATH[LIST_PATH.index("init.conf")]), "r") as f:
+            for i in f.readlines():
+                if i.find("#") == -1:
+                    x=i.split("=")
+                    CONFIG.append(x[1].strip("\n"))
+except Exception as e:
+    print(str(e))
+    sys.exit(1)
 #======================================================
 # Check config
 #======================================================
@@ -44,14 +53,12 @@ if len(CONFIG) < 2:
 #======================================================
 # Find value set match
 #======================================================
-def find_set_match(_set, i, j):
+def find_set_match(_set, _str, i):
     if i == len(_set):
         return -1
-    elif i != len(_set) and j == len(_set[i]):
-        return find_set_match(_set, (i+1), j)
-    elif i != len(_set) and j != len(_set[i]) and _set[i][0] != _set[j][0]:
-        return find_set_match(_set, i, (j+1))
-    elif i != len(_set) and j != len(_set[i]) and _set[i][0] == _set[j][0]:
+    elif _set[i][2] != _str:
+        return find_set_match(_set, _str, (i+1))
+    elif _set[i][2] == _str:
         return i
 #======================================================
 # Change value in array of set
@@ -281,18 +288,25 @@ def handle_client(conn, addr, stu, cli):
                 conn.recv(int(msg_length[-1])).decode(FORMAT)
                 msg = "&&&".join(msg_length[0:-1])
                 msg = msg.split("&&&")
-                print(msg)
+                if len(cli) > 0 and len(msg) <= 3:
+                    index = find_set_match(cli[msg[0]], msg[1], 0)
+                    if msg[-1] == "rm":
+                        cli[msg[0]].pop(index)
+                        with open(os.path.join(__location__, "config.json"), "w+") as oldfile:
+                            json.dump(cli, oldfile, indent = 4)
+                    else:
+                        cli[msg[0]][index][1] = msg[-1]
+                        with open(os.path.join(__location__, "config.json"), "w+") as outfile:
+                            json.dump(cli, outfile, indent = 4)
+                elif len(cli) > 0 and len(msg) > 3:
+                    cli[msg[0]].append(msg)
+                    with open(os.path.join(__location__, "config.json"), "w+") as outfile:
+                        json.dump(cli, outfile, indent = 4)
+                else:
+                    if "config.json" in os.listdir(__location__):
+                        with open(os.path.join(__location__, "config.json")) as json_file:
+                            cli = json.load(json_file)
                 connected = False
-                '''match = find_set_match(cli[msg_conv[0]][0], 0, 0)
-                if len(cli[msg_conv[0]]) == 0:
-                    cli[msg_conv[0]].append(msg_conv[1:len(msg_conv)])
-                elif len(cli[msg_conv[0]]) != 0 and match == -1:
-                    cli[msg_conv[0]].append(msg_conv[1:len(msg_conv)])
-                elif len(cli[msg_conv[0]]) != 0 and match != -1:
-                    cli[msg_conv[0]][match] = changeValue(cli[msg_conv[0]][match], 1)
-                    print(cli)
-                    conn.send("recevied.".encode(FORMAT))
-                    connected = False'''
             elif "," not in msg_length and "&&&" not in msg_length and "|" in msg_length:
                 msg_length = msg_length.split("|")
                 conn.recv(int(msg_length[-1])).decode(FORMAT)
@@ -307,18 +321,16 @@ def handle_client(conn, addr, stu, cli):
                 connected=False
             elif ("," not in msg or "&&&" not in msg) and "#" in msg:
                 msg_conv = msg.split("#")
-                if stu[msg_conv[0]] == 1:
+                msg_detail = msg[1].split("|||")
+                print(msg_conv, "\n", msg_detail)
+                '''if stu[msg_conv[0]] == 1:
                     insertDataHash(CONFIG, msg_conv)
                 elif stu[msg_conv[1]] == 1:
                     insertAndCreateFile(CONFIG, msg_conv)
                 elif stu[msg_conv[2]] == 1:
                     insertCheckRecord(CONFIG, msg_conv)
                 elif stu[msg_conv[3]] == 1:
-                    wakeUpSniffer(CONFIG, msg_conv)
-            else:
-                print(msg)
-                conn.send('recevied.'.encode(FORMAT))
-                connected = False
+                    wakeUpSniffer(CONFIG, msg_conv)'''
     conn.close()
 #======================================================
 # Set to start listening
