@@ -1,0 +1,4 @@
+pyOpenSSL
+mysql.connector
+cx_Oracle
+numpy
