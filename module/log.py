@@ -6,21 +6,23 @@ class Log0Hash:
         self.username = user
         self.password = passwd
         self.database = db
-        self.table = table.split(":")
+        self.table = table.split(":")[0]
+        self.column = table.split(":")[-1]
         self._context = content
         self.client = None
 
     def insertDataHash(self):
-        if not self._context == False:
-            db = mysql.connector.connect(
-                host = self.host,
-                user = self.username,
-                password = self.password,
-                database = self.database,
-                auth_plugin = "mysql_native_password"
-            )
-            if not self._context:
-                cursor = db.cursor()
-                query = f"INSERT INTO {table[0]} ({table[-1]}) VALUES {tuple(iter(self._context))}"
-                cursor.execute(query)
-                db.commit()
+        db = mysql.connector.connect(
+            host = self.host,
+            user = self.username,
+            password = self.password,
+            database = self.database,
+            auth_plugin = "mysql_native_password"
+        )
+        cursor = db.cursor()
+        if len(self._context) != 0:
+            query = f"INSERT INTO {self.table} ({self.column}) VALUES {tuple(iter(self._context))}"
+            cursor.execute(query)
+            db.commit()
+        else:
+            pass

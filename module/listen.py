@@ -55,7 +55,8 @@ class SSLServer:
                     status = db.status(self.init[1], self.init[2], self.init[3], 'DOL_PDPA').get()
                     msg_conv = msg.split("#")
                     msg_detail = msg_conv[-1].split("|||")
-                    if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1":
+                    if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1": # Success
+                        msg_detail.pop(0)
                         log.Log0Hash(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-3], msg_detail).insertDataHash()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
                         msg_detail.pop(0), msg_detail.pop()
