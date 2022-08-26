@@ -62,8 +62,8 @@ class SSLServer:
                         msg_detail.pop(0), msg_detail.pop()
                         file.fileDirectory(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2], self.init[5], self.init[6:-3], msg_detail).insertDataFile()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3":
-                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4]. self.init[-1:], msg_detail).connect()
-                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4":
+                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-1:], msg_detail).connect()
+                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
                         pass
                     else:
                         pass
