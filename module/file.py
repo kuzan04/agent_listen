@@ -7,26 +7,25 @@ from os.path import isfile, join
 import mysql.connector
 
 class fileDirectory:
-    def __init__(self, host, user, passwd, db, tb, col, val, main, _dir, uftp, gftp):
+    def __init__(self, host, user, passwd, db, tb, _dir, cftp, val):
         self.host = host
         self.username = user
         self.password = passwd
         self.database = db
-        self.table = tb
-        self.column = col
-        self.value = val
+        self.table = tb.split(":")[0]
+        self.column = tb.split(":")[-1]
         self.directory = _dir
-        self.file = file
-        self.uftp = uftp
-        self.gftp = gftp
+        self.uftp = cftp[0]
+        self.gftp = cftp[-1]
+        self.value = val
 
-    def find_match(self, arr, arr0, i):
+    def find_match(self, arr, i):
         if i == len(arr):
             return False
-        elif arr[i][1:] == tuple(iter(arr0)):
+        elif arr[i][1:] == tuple(iter(self.value)):
             return True
         else:
-            return self.find_match(arr, arr0, (i+1))
+            return self.find_match(arr, (i+1))
 
     def createFile(self, result):
         if not os.path.isdir(f"{_dir}"):
@@ -39,7 +38,13 @@ class fileDirectory:
             gid = grp.getgrname(self.gftp).gr_uid
             os.chown(f"{_dir}", uid, gid)
 
-    def insert(self):
+    def findNameFile(self, re, a_file, i):
+        if i == len(a_file):
+            return re
+        else:
+            return self.findNameFile(re+a_file[i].split("@")[-1]+"@", a_file, (i+1))
+
+    def insertDataFile(self):
         db = mysql.connector.connect(
             host = self.host,
             user = self.username,
@@ -48,24 +53,27 @@ class fileDirectory:
             auth_plugin = "mysql_native_password"
         )
         cursor = db.cursor()
-        cursor.execute(f"SELECT {table[-1]} FROM {table[0]} ORDER BY id ASC;")
+        cursor.execute(f"SELECT {self.column} FROM {self.table} ORDER BY id ASC;")
         result = cursor.fetchall()
-        self.createFile()
+        #self.createFile()
+        columns = ",".join(self.column.split(",")[1:])
         if len(result) == 0:
-            query = f"INSERT INTO {self.table} ({self.column}) VALUES {tuple(iter(self.val))}"
+            query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
             cursor.execute(query)
             db.commit()
         else:
             res = True
-            if self.find_match(result, val, 0) == False:
-                query = f"INSERT INTO {self.table} ({self.column}) VALUES {tuple(iter(self.val))}"
+            if self.find_match(result, 0) == False:
+                query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
                 cursor.execute(query)
                 db.commit()
-                _, _, filenames = next(walk(f"{self.directory}"), (None, None, []))
-                if not file in filenames:
-                    cursor.execute(f'SELECT {column} FROM {table} WHERE name_file = "{file}"')
-                    result = cursor.fetchall()
-                    _id = self.column.split(",")[0]
-                    query = f'DELETE FROM {table} WHERE {_id} = "{result[0][0]}"'
-                    cursor.execute(query)
-                    db.commit()
+            _, _, filenames = next(walk(f"{self.directory}"), (None, None, []))
+            reverse = self.findNameFile("", filenames, 0).split("@")
+            reverse.pop()
+            if not self.value[-1] in reverse:
+                cursor.execute(f'SELECT {self.column} FROM {self.table} WHERE name_file = "{self.value[-1]}"')
+                result = cursor.fetchall()
+                _id = self.column.split(",")[0]
+                query = f'DELETE FROM {self.table} WHERE {_id} = "{result[0][0]}"'
+                cursor.execute(query)
+                db.commit()

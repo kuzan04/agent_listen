@@ -7,8 +7,7 @@ import os
 import shutil
 import time
 import datetime
-import subprocess
-from module import cert, listen, log, file, db
+from module import cert, listen
 #======================================================
 # Settings from config
 #======================================================
@@ -38,13 +37,13 @@ def setConfig(__location__, __ssl__, create, LIST_PATH, CONFIG):
         sys.exit(1)
     finally:
         if len(CONFIG) < 18:
-            print(f"[ERROR] Please check file config!!")
+            print(f"[Errno] Please check file config!!")
             sys.exit(1)
 #======================================================
 # Set to start listening
 #======================================================
-def start(stu, cli, sl):
-    server = listen.SSLServer(SERVER[-1], int(CONFIG[0]), sl[0], sl[1], sl[-2]).connect()
+def start(local, ip, config, sl):
+    server = listen.SSLServer(local, ip, int(config[0]), sl[0], sl[1], sl[-2], config).connect()
     s_thread = listen.SSLServerThread(server)
     s_thread.start()
 #======================================================
@@ -57,15 +56,13 @@ if __name__ == "__main__":
     create = ["listen", "client"]
     LIST_PATH = os.listdir(__location__)
     # setting socket
-    HEADER=1024
     SERVER=socket.gethostbyname_ex(socket.gethostname())[-1]
     CONFIG=[]
-    FORMAT='utf-8'
-    DISCONNECT_MESSAGE = "!DISCONNECT"
     # of after running
-    STATUS={"AG1":0,"AG2":0,"AG3":0,"AG4":0}
-    CONFIG_CLIENT = {"AG1":[], "AG2":[], "AG3":[], "AG4":[]}
     setConfig(__location__, __ssl__, create, LIST_PATH, CONFIG)
     print("[STARTING] server is starting...")
     #print(CONFIG[10:-7]) # CheckDB
-    start(STATUS, CONFIG_CLIENT, __ssl__)
+    while SERVER[-1] == "127.0.0.1" or SERVER[-1] == "localhost":
+        print("[Errno] Unknow ip ethernet wait for 15 seconds script rebooting.")
+        time.sleep(15)
+    start(__location__, SERVER[-1], CONFIG, __ssl__)

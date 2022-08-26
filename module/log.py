@@ -1,12 +1,12 @@
 import mysql.connector
 
 class Log0Hash:
-    def __init__(self, config, content):
-        self.host = config[1]
-        self.username = config[2]
-        self.password = config[3]
-        self.database = config[4]
-        self.table = config[-2].split(":")
+    def __init__(self, host, user, passwd, db, table, content):
+        self.host = host
+        self.username = user
+        self.password = passwd
+        self.database = db
+        self.table = table.split(":")
         self._context = content
         self.client = None
 

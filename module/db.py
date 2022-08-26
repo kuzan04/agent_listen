@@ -5,6 +5,31 @@ import json
 import datetime
 import numpy as np
 
+class status:
+    def __init__(self, host, user, passwd, db):
+        self.host = host
+        self.username = user
+        self.password = passwd
+        self.database = db
+
+    def get(self):
+        conn = mysql.connector.connect(
+            host = self.host,
+            user = self.username,
+            password = self.password,
+            database = self.database,
+            auth_plugin = "mysql_native_password"
+        )
+        cursor = conn.cursor()
+        cursor.execute('SELECT code, status FROM TB_TR_PDPA_AGENT_STORE;')
+        return self.convertTupleToSet(cursor.fetchall())
+
+    def convertTupleToSet(self, fetch):
+        _status = {}
+        for i in fetch:
+            _status[i[0]] = i[1]
+        return _status
+
 class testConnect:
     def __init__(self, _type, host, user, passwd, db):
         self._type = int(_type)
@@ -23,7 +48,7 @@ class testConnect:
                 auth_plugin = "mysql_native_password"
             )
             cursor = mydb.cursor()
-            cursor = execute('SHOW TABLES;')
+            cursor.execute('SHOW TABLES;')
             result = cursor.fetchall()
             result = np.asarray(result)
             table = {}
@@ -68,19 +93,20 @@ class testConnect:
             return str(e)
 
     def connect(self):
-        if self._type == 1:
+        if int(self._type) == 1:
             return self.mySql()
         else:
             return self.oracleDB()
 
 class DBcheck:
-    def __init__(self, host, user, passwd, tb, col, val):
+    def __init__(self, host, user, passwd, db, tb, val):
         self.host = host
         self.username = user
         self.password = passwd
         self.database = db
-        self.table = tb
-        self.column = col
+        self._table = tb
+        self.table = []
+        self.column = []
         self._context = val
 
     def updateMany(self, db, old, new, i):
@@ -172,6 +198,11 @@ class DBcheck:
                 db.commit()
                 count += 1
 
+    def convertTableToColumn(self):
+        for t in self._table:
+            self.table.append(t.split(":")[0])
+            self.column.append(t.split(":")[-1])
+
     def connect(self):
         db = mysql.connector.connect(
             host = self.host,
@@ -180,6 +211,8 @@ class DBcheck:
             database = self.database
         )
         cursor = db.cursor()
-        cursor.execute(f"SELECT {self.column} FROM {self.table};")
-        result = cursor.fetchall()
-        self.process(db, result)
+        self.convertTableToColumn()
+        for i in range(len(self.table)):
+            cursor.execute(f"SELECT {self.column[i]} FROM {self.table[i]};")
+            result = cursor.fetchall()
+            self.process(db, result)
