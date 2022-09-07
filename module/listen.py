@@ -67,6 +67,8 @@ class SSLServer:
                         pass
                     else:
                         pass
+                elif "!CHECK" in msg:
+                    print("Ok")
                 elif "!DISCONNECT" in msg:
                     self.close(sock)
             else:

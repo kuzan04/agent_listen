@@ -125,15 +125,15 @@ class DBcheck:
         cursor = db.cursor()
         if i == len(new):
             return 0
-        elif i != 0:
-            query = f'UPDATE {mark} SET {column[i]} = "{new[i]}" WHERE {column[0]} = {_id}'
-            cursor.execute(query)
-            db.commit()
-            return self.upAndDelMany(db, _id, new, mark, column, (i+1))
-        else:
+        elif new[0] != _id and i != 0:
             query = f'DELETE FROM {mark} WHERE {column[0]} = {_id}'
             cursor.execute(query)
             db.commit()
+        elif new[0] == _id and i != 0:
+            query = f'UPDATE {mark} SET {column[i]} = "{new[i]}" WHERE {column[0]} = {_id}'
+            cursor.execute(query)
+            db.commit()
+        else:
             return self.upAndDelMany(db, _id, new, mark, column, (i+1))
 
     def leavings(self, db, _str, result, mark, i):
@@ -171,12 +171,22 @@ class DBcheck:
         if i == len(self.val):
             return 0
         elif j == len(self.val[i]):
-            return self.equalSum(db, old, mark, column, (i+1), j)
-        elif self.val[i] != old[i] and j != 0:
-            query = f'INSERT INTO {mark} SET {column[j]} = "{self.val[i][j]}" WHERE {column[0]} = {self.val[i][0]}'
+            return self.equalSum(db, old, mark, column, (i+1), 0)
+        elif self.val[i] == old[i] and j != 0:
+            query = f'UPDATE {mark} SET {column[j]} = "{self.val[i][j]}" WHERE {column[0]} = {self.val[i][0]}'
             cursor.execute(query)
             db.commit()
             return self.equalSum(db, old, mark, column, i, (j+1))
+        elif self.val[i] != old[i] and j != 0:
+            cursor.execute(f'DELETE FROM {mark} WHERE {column[0]} = {old[i][0]}')
+            db.commit()
+            set_str = ["%s" for _ in range(len(column))]
+            set_str = ",".join(set_str)
+            conv_column = ",".join(column)
+            query = f'INSERT INTO {mark} ({conv_column}) VALUES ({set_str})'
+            cursor.execute(query, self.val[i])
+            db.commit()
+            return self.equalSum(db, old, mark, column, (i+1), 0)
         else:
             return self.equalSum(db, old, mark, column, i, (j+1))
 
@@ -203,20 +213,11 @@ class DBcheck:
         elif len(self.val) == len(result):
             self.equalSum(db, result, self.table[index], column, 0, 0)
         elif len(self.val) < len(result):
-            count = 0
             for i in range(len(self.val)):
                 if self.val[i] != result[i]:
-                    #print(self.val[i], result[i], self.val[i][0] == result[i][0], count)
-                    self.upAndDelMany(db, result[i][0], self.val[i], self.table[index], column, 0)
-                cursor.execute(f"SELECT {self.column[index]} FROM {self.table[index]};")
-                result = cursor.fetchall()
-                count += 1
-            #while count < len(result):
-            #    query = f'DELETE FROM {self.table[index]} WHERE {column[0]} = {result[count][0]}'
-            #    print(query)
-                #cursor.execute(query)
-                #db.commit()
-           #     count += 1
+                    self.upAndDelMany(db, int(result[i][0]), self.val[i], self.table[index], column, 0)
+                    cursor.execute(f"SELECT {self.column[index]} FROM {self.table[index]};")
+                    result = cursor.fetchall()
 
     def convertTableToColumn(self):
         for t in self._table:
@@ -224,16 +225,16 @@ class DBcheck:
             self.column.append(t.split(":")[-1])
 
     def connect(self):
-        db = mysql.connector.connect(
-            host = self.host,
-            user = self.username,
-            password = self.password,
-            database = self.database,
-            auth_plugin = "mysql_native_password"
-        )
-        cursor = db.cursor()
         self.convertTableToColumn()
         for i in range(len(self.table)):
+            db = mysql.connector.connect(
+                host = self.host,
+                user = self.username,
+                password = self.password,
+                database = self.database,
+                auth_plugin = "mysql_native_password"
+            )
+            cursor = db.cursor()
             cursor.execute(f"SELECT {self.column[i]} FROM {self.table[i]};")
             result = cursor.fetchall()
             self.process(db, result, i)
