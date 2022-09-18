@@ -52,17 +52,17 @@ class SSLServer:
                     msg = msg.split('|')
                     sock.send(db.testConnect(msg[0], msg[1], msg[2], msg[-2], msg[-1]).connect().encode("utf-8"))
                 elif "#" in msg:
-                    status = db.status(self.init[1], self.init[2], self.init[3], 'DOL_PDPA').get()
+                    status = db.status(self.init[1], self.init[2], self.init[3], self.init[4]).get()
                     msg_conv = msg.split("#")
                     msg_detail = msg_conv[-1].split("|||")
                     if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1": # Success
                         msg_detail.pop(0)
-                        log.Log0Hash(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-3], msg_detail).insertDataHash()
+                        log.Log0Hash(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-4], msg_detail).insertDataHash()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
                         msg_detail.pop(0), msg_detail.pop()
-                        file.fileDirectory(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2], self.init[5], self.init[6:-3], msg_detail).insertDataFile()
-                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3":
-                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-1:], msg_detail).connect()
+                        file.fileDirectory(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-3], self.init[5], self.init[6:-4], msg_detail).insertDataFile()
+                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3": # Success.
+                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2:-1], msg_detail).connect()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
                         pass
                     else:
@@ -89,27 +89,3 @@ class SSLServerThread(Thread):
             self._server.connect()
         except Exception:
             pass
-
-'''if "&&&" in msg and "|" not in msg:
-    msg = msg.split("&&&")
-    msg = "&&&".join(msg[0:-1])
-    msg = msg.split("&&&")
-    if len(self._cli[msg[0]]) > 0 and len(msg) <= 3:
-        index = self.find_set_match(self._cli[msg[0]], msg[1], 0)
-        if msg[-1] == "rm":
-            self._cli[msg[0]].pop(index)
-            with open(os.path.join(self._path, "config.json"), "w+") as oldfile:
-                json.dump(self._cli, oldfile, indent = 4)
-                sock.send("removed.".encode(self._format))
-        else:
-            self._cli[msg[0]][index][1] = msg[-1]
-            with open(os.path.join(self._path, "config.json"), "w+") as outfile:
-                json.dump(self._cli, outfile, indent = 4)
-    elif len(self._cli[msg[0]]) > 0 and len(msg) > 3:
-        self._cli[msg[0]].append(msg)
-        with open(os.path.join(self.path, "config.json"), "w+") as outfile:
-            json.dump(self._cli, outfile, indent = 4)
-    else:
-        if "config.json" in os.listdir(self._path):
-            with open(os.path.join(self._path, "config.json")) as json_file:
-                self._cli = json.load(json_file)'''

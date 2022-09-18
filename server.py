@@ -36,7 +36,7 @@ def setConfig(__location__, __ssl__, create, LIST_PATH, CONFIG):
         print(str(e))
         sys.exit(1)
     finally:
-        if len(CONFIG) < 18:
+        if len(CONFIG) < 19:
             print(f"[Errno] Please check file config!!")
             sys.exit(1)
 #======================================================
