@@ -1,4 +1,5 @@
 import socket
+import mysql.connector
 import ssl
 import os
 import json
@@ -6,11 +7,12 @@ from threading import Thread
 from module import log, file, db
 
 class SSLServer:
-    def __init__(self, path, host, port, server_cert, server_key, client_cert, config, chunk_size=2048):
+    def __init__(self, path, host, port, server_cert, server_key, client_cert, config, chunk_size=(1024**2)):
         self._path = path
         self.host = host
         self.port = port
         self.init = config[0:-7]
+        self.history = self.init[-1]
         self.chunk_size = chunk_size
         self._context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         self._context.verify_mode = ssl.CERT_REQUIRED
@@ -42,6 +44,14 @@ class SSLServer:
         elif _set[i][2] == _str:
             return i
 
+    def find_tuple(self, _tuple, mark, c, i):
+        if i == len(_tuple):
+            return -1
+        elif _tuple[i][1] == mark and _tuple[i][-1] == c:
+            return _tuple[i]
+        else:
+            return self.find_tuple(_tuple, mark, c, (i+1))
+
     def _recv(self, sock):
         while True:
             msg = sock.recv(self.chunk_size).decode()
@@ -52,17 +62,33 @@ class SSLServer:
                     msg = msg.split('|')
                     sock.send(db.testConnect(msg[0], msg[1], msg[2], msg[-2], msg[-1]).connect().encode("utf-8"))
                 elif "#" in msg:
+                    manage = mysql.connector.connect(host=self.init[1], user=self.init[2], password=self.init[3], database=self.init[4], auth_plugin = "mysql_native_password")
+                    cur_manage = manage.cursor()
+                    cur_manage.execute("SELECT pam.agm_id, pam.agm_name, pas.code FROM TB_TR_PDPA_AGENT_MANAGE as pam JOIN TB_TR_PDPA_AGENT_STORE as pas ON pam.ags_id = pas.ags_id;")
+                    res_manage = cur_manage.fetchall()
+                    table_history = self.history.split(":")[0]
+                    column_history = self.history.split(":")[-1]
                     status = db.status(self.init[1], self.init[2], self.init[3], self.init[4]).get()
                     msg_conv = msg.split("#")
                     msg_detail = msg_conv[-1].split("|||")
                     if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1": # Success
-                        msg_detail.pop(0)
+                        mark = msg_detail.pop(0)
                         log.Log0Hash(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-4], msg_detail).insertDataHash()
+                        selected = self.find_tuple(res_manage, mark, "AG1", 0)
+                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
+                        manage.commit()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
-                        msg_detail.pop(0), msg_detail.pop()
+                        mark, _ = msg_detail.pop(0), msg_detail.pop()
                         file.fileDirectory(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-3], self.init[5], self.init[6:-4], msg_detail).insertDataFile()
+                        selected = self.find_tuple(res_manage, mark, "AG2", 0)
+                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
+                        manage.commit()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3": # Success.
-                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2:-1], msg_detail).connect()
+                        mark = msg_detail.pop(0)
+                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2], msg_detail).connect() #self.init[-2:-1]
+                        selected = self.find_tuple(res_manage, mark, "AG3", 0)
+                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
+                        manage.commit()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
                         pass
                     else:

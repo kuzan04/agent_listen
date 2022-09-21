@@ -4,6 +4,7 @@ import re
 import json
 import datetime
 import numpy as np
+import datetime
 
 class status:
     def __init__(self, host, user, passwd, db):
@@ -104,137 +105,168 @@ class DBcheck:
         self.username = user
         self.password = passwd
         self.database = db
-        self._table = tb
-        self.table = []
-        self.column = []
+        self._from = content[0]
+        self.table = tb.split(":")[0]
+        self.column = tb.split(":")[-1]
         self.val = eval(content[-1])
 
-    def updateMany(self, db, old, new, mark, column, i):
-        cursor = db.cursor()
-        if i == len(old):
-            return 0
-        elif i != 0:
-            query = f'UPDATE {mark} SET {column[i]} = "{new[i]}" WHERE {column[0]} = {new[0]}'
-            cursor.execute(query)
-            db.commit()
-            return self.updateMany(db, old, new, mark, column, (i+1))
-        else:
-            return self.updateMany(db, old, new, mark, column, (i+1))
-
-    def upAndDelMany(self, db, _id, new, mark, column, i):
-        cursor = db.cursor()
-        if i == len(new):
-            return 0
-        elif new[0] != _id and i != 0:
-            query = f'DELETE FROM {mark} WHERE {column[0]} = {_id}'
-            cursor.execute(query)
-            db.commit()
-        elif new[0] == _id and i != 0:
-            query = f'UPDATE {mark} SET {column[i]} = "{new[i]}" WHERE {column[0]} = {_id}'
-            cursor.execute(query)
-            db.commit()
-        else:
-            return self.upAndDelMany(db, _id, new, mark, column, (i+1))
-
-    def leavings(self, db, _str, result, mark, i):
-        cursor = db.cursor()
+    def equalSum(self, old, i, a):
         if i == len(self.val):
-            return 0
+            return a
+        elif self.val[i] == old[i]:
+            return self.equalSum(old, (i+1), a)
         else:
-            try:
-                if result[i] == self.val[i]:
-                    return self.leavings(db, _str, result, mark, (i+1))
+            a.append(i)
+            return self.equalSum(old, (i+1), a)
+
+    def insertMore(self, db, old, column, i):
+        cursor = db.cursor()
+        try:
+            if i == len(self.val):
+                return -1
+            elif old[i] == self.val[i]:
+                return self.insertMore(db, old, column, (i+1))
+            else:
+                self.update(db, old, i, column.split(","), 0)
+                return self.insertMore(db, old, column, (i+1))
+        except IndexError:
+                if i == len(self.val):
+                    return -1
                 else:
-                    query = f"INSERT INTO {self.table[mark]} ({self.column[mark]}) VALUES ({_str})"
-                    cursor.execute(query, self.val[i])
+                    val = self.val[i]+(self._from,)
+                    val = list(val)
+                    val = [str(x) for x in val]
+                    val = tuple(val)
+                    query = f"INSERT INTO {self.table} ({column}) VALUE {val};"
+                    cursor.execute(query)
                     db.commit()
-                    return self.leavings(db, _str, result, mark, (i+1))
-            except IndexError:
-                query = f"INSERT INTO {self.table[mark]} ({self.column[mark]}) VALUES ({_str})"
-                cursor.execute(query, self.val[i])
-                db.commit()
-                return self.leavings(db, _str, result, mark, (i+1))
-            except mysql.connector.errors.IntegrityError as e:
-                err = str(e).split(" ")
-                if err[0] == "1062" and err[1] == "(23000)":
-                    db = mysql.connector.connect(
-                        host = self.host,
-                        user = self.username,
-                        password = self.password,
-                        database = self.database,
-                        auth_plugin = "mysql_native_password"
-                    )
-                    return self.leavings(db, _str, result, mark, (i+1))
+                    return self.insertMore(db, old, column, (i+1))
 
-    def equalSum(self, db, old, mark, column, i, j):
+    def update(self, db, old, mark, column, i):
         cursor = db.cursor()
-        if i == len(self.val):
-            return 0
-        elif j == len(self.val[i]):
-            return self.equalSum(db, old, mark, column, (i+1), 0)
-        elif self.val[i] == old[i] and j != 0:
-            query = f'UPDATE {mark} SET {column[j]} = "{self.val[i][j]}" WHERE {column[0]} = {self.val[i][0]}'
+        val = self.val[mark]+(self._from,)
+        val = list(val)
+        val = [str(x) for x in val]
+        val = tuple(val)
+        try:
+            if i == len(old):
+                return -1
+            elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
+                query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}";'
+                cursor.execute(query)
+                db.commit()
+                return self.update(db, old, mark, column, (i+1))
+            elif old[mark][0] != val[0]:
+                column = ",".join(column)
+                query = f'INSERT INTO {self.table} ({column}) VALUE {val};'
+                cursor.execute(query)
+                db.commit()
+            else:
+                return self.update(db, old, mark, column, (i+1))
+        except IndexError:
+            column = ",".join(column)
+            query = f'INSERT INTO {self.table} ({column}) VALUE {val};'
             cursor.execute(query)
             db.commit()
-            return self.equalSum(db, old, mark, column, i, (j+1))
-        elif self.val[i] != old[i] and j != 0:
-            cursor.execute(f'DELETE FROM {mark} WHERE {column[0]} = {old[i][0]}')
-            db.commit()
-            set_str = ["%s" for _ in range(len(column))]
-            set_str = ",".join(set_str)
-            conv_column = ",".join(column)
-            query = f'INSERT INTO {mark} ({conv_column}) VALUES ({set_str})'
-            cursor.execute(query, self.val[i])
-            db.commit()
-            return self.equalSum(db, old, mark, column, (i+1), 0)
-        else:
-            return self.equalSum(db, old, mark, column, i, (j+1))
 
-    def process(self, db, result, index):
+    def delete(self, db, old, column, i, j):
         cursor = db.cursor()
-        column = self.column[index].split(",")
-        set_str = ["%s" for _ in range(len(column))]
-        set_str = ",".join(set_str[:len(set_str)])
-        if len(self.val) > len(result) and len(result) == 0:
-            query = f"INSERT INTO {self.table[index]} ({self.column[index]}) VALUES ({set_str});"
+        conv_column = ",".join(column)
+        try:
+            if len(old) != 0:
+                if i == len(self.val):
+                    return i
+                else:
+                    val = self.val[i] + (self._from,)
+                    val = list(val)
+                    val = [str(x) for x in val]
+                    val = tuple(val)
+                    cursor.execute(f'SELECT {conv_column} FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}";')
+                    mark = cursor.fetchall()
+                    if j == len(val):
+                        return self.delete(db, old, column, (i+1), j)
+                    elif old[i][j] != val[j] and j == 0:
+                        if len(mark) > 1:
+                            cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC;')
+                            _id = cursor.fetchall()
+                            for y in range(len(_id)):
+                                if y != len(_id):
+                                    query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}";'
+                                    cursor.execute(query)
+                                    db.commit()
+                                else:
+                                    pass
+                        return self.delete(db, old, column, (i+1), j)
+                    elif old[i][j] == val[j] and j != 0:
+                        query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}";'
+                        cursor.execute(query)
+                        db.commit()
+                        return self.delete(db, old, column, i, (j+1))
+                    else:
+                        return self.delete(db, old, column, (i+1), j)
+            else:
+                return 0
+        except IndexError:
+            return -1
+
+    def overSize(self, db, column, i):
+        cursor = db.cursor()
+        if i == len(self.val):
+            return -1
+        else:
+            val = self.val[i] + (self._from,)
+            val = list(val)
+            val = [str(x) for x in val]
+            val = tuple(val)
+            conv_column = column.split(",")
+            cursor.execute(f'SELECT {column} FROM {self.table} WHERE {conv_column[0]} = "{val[0]}" AND {conv_column[-1]} = "{self._from}";')
+            mark = cursor.fetchall()
+            if len(mark) == 0:
+                cursor.execute(f"INSERT INTO {self.table} ({column}) VALUE {val};")
+                db.commit()
+            return self.overSize(db, column, (i+1))
+
+    def process(self, db):
+        cursor = db.cursor()
+        column = self.column.split(",")
+        set_str = ["%s" for _ in range(len(self.val[0])+1)]
+        set_str = ",".join(set_str)
+        truly_column = ",".join(column[0:len(self.val[0])]) + f",{column[-1]}"
+        # Statement(2) UP
+        cursor.execute(f'SELECT {truly_column} FROM {self.table} WHERE {column[-1]} = "{self._from}";')
+        res = cursor.fetchall()
+        if len(res) == 0:
+            query = f"INSERT INTO {self.table} ({truly_column}) VALUES ({set_str});"
+            self.val = [x+(self._from,) for x in self.val]
             cursor.executemany(query, self.val)
             db.commit()
-        elif len(self.val) > len(result) and len(result) > 0:
-            for i in range(len(result)):
-                if self.val[i][0] != result[i][0]:
-                    query = f"INSERT INTO {self.table[index]} ({self.column[index]}) VALUES ({set_str})"
-                    cursor.execute(query, self.val[i])
-                    db.commit()
+        elif len(res) < len(self.val):
+            self.insertMore(db, res, truly_column, 0)
+        elif len(res) == len(self.val):
+            current_index = self.equalSum(res, 0, [])
+            for x in current_index:
+                self.update(db, res, x, truly_column.split(","), 0)
+        elif len(res) > len(self.val):
+            count = 0
+            again = self.delete(db, res, truly_column.split(","), 0, 0)
+            while again >= 50:
+                count+=1
+                again = self.delete(db, res[(again*count):], truly_column.split(","), 0, 0)
+            else:
+                if again == 0:
+                    self.overSize(db, truly_column, 0)
                 else:
-                    self.updateMany(db, result[i], self.val[i], self.table[index], column, 0)
-                    cursor.execute(f"SELECT {self.column[index]} FROM {self.table[index]};")
-                    result = cursor.fetchall()
-                    self.leavings(db, set_str, result, index, 0)
-        elif len(self.val) == len(result):
-            self.equalSum(db, result, self.table[index], column, 0, 0)
-        elif len(self.val) < len(result):
-            for i in range(len(self.val)):
-                if self.val[i] != result[i]:
-                    self.upAndDelMany(db, int(result[i][0]), self.val[i], self.table[index], column, 0)
-                    cursor.execute(f"SELECT {self.column[index]} FROM {self.table[index]};")
-                    result = cursor.fetchall()
-
-    def convertTableToColumn(self):
-        for t in self._table:
-            self.table.append(t.split(":")[0])
-            self.column.append(t.split(":")[-1])
+                    pass
+        else:
+            pass
 
     def connect(self):
-        self.convertTableToColumn()
-        for i in range(len(self.table)):
-            db = mysql.connector.connect(
-                host = self.host,
-                user = self.username,
-                password = self.password,
-                database = self.database,
-                auth_plugin = "mysql_native_password"
-            )
-            cursor = db.cursor()
-            cursor.execute(f"SELECT {self.column[i]} FROM {self.table[i]};")
-            result = cursor.fetchall()
-            self.process(db, result, i)
+        main = mysql.connector.connect(
+            host = self.host,
+            user = self.username,
+            password = self.password,
+            database = self.database,
+            auth_plugin = "mysql_native_password",
+            sql_mode = 'IGNORE_SPACE'
+        )
+        self.process(main)

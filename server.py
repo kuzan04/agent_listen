@@ -64,5 +64,5 @@ if __name__ == "__main__":
     #print(CONFIG[10:-7]) # CheckDB
     while SERVER[-1] == "127.0.0.1" or SERVER[-1] == "localhost":
         print("[Errno] Unknow ip ethernet wait for 15 seconds script rebooting.")
-        time.sleep(15)
+        time.sleep(5)
     start(__location__, SERVER[-1], CONFIG, __ssl__)

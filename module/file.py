@@ -1,6 +1,7 @@
 import pwd
 import grp
 import os
+import shutil
 from os import walk
 from os import listdir
 from os.path import isfile, join
@@ -15,8 +16,8 @@ class fileDirectory:
         self.table = tb.split(":")[0]
         self.column = tb.split(":")[-1]
         self.directory = _dir
-        self.uftp = cftp[0]
-        self.gftp = cftp[-1]
+        self._lpath = cftp[0]
+        self._dpath = cftp[-1]
         self.value = val
 
     def find_match(self, arr, i):
@@ -26,17 +27,6 @@ class fileDirectory:
             return True
         else:
             return self.find_match(arr, (i+1))
-
-    def createFile(self, result):
-        if not os.path.isdir(f"{_dir}"):
-            uid = pwd.getpwnam(self.uftp).pw_uid
-            gid = grp.getgrname(self.gftp).gr_uid
-            os.mkdir(f"{_dir}")
-            os.chown(f"{_dir}", uid, gid)
-        elif os.path.isdir(f"{_dir}"):
-            uid = pwd.getpwnam(self.uftp).pw_uid
-            gid = grp.getgrname(self.gftp).gr_uid
-            os.chown(f"{_dir}", uid, gid)
 
     def findNameFile(self, re, a_file, i):
         if i == len(a_file):
@@ -55,25 +45,38 @@ class fileDirectory:
         cursor = db.cursor()
         cursor.execute(f"SELECT {self.column} FROM {self.table} ORDER BY id ASC;")
         result = cursor.fetchall()
-        #self.createFile()
         columns = ",".join(self.column.split(",")[1:])
+        _, _, filenames = next(walk(f"{self.directory}"), (None, None, []))
         if len(result) == 0:
             query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
             cursor.execute(query)
             db.commit()
+        elif self.find_match(result, 0) == False and len(result) > 0:
+            query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
+            cursor.execute(query)
+            db.commit()
         else:
-            res = True
-            if self.find_match(result, 0) == False:
-                query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
-                cursor.execute(query)
-                db.commit()
-            _, _, filenames = next(walk(f"{self.directory}"), (None, None, []))
             reverse = self.findNameFile("", filenames, 0).split("@")
             reverse.pop()
             if not self.value[-1] in reverse:
-                cursor.execute(f'SELECT {self.column} FROM {self.table} WHERE name_file = "{self.value[-1]}"')
-                result = cursor.fetchall()
                 _id = self.column.split(",")[0]
-                query = f'DELETE FROM {self.table} WHERE {_id} = "{result[0][0]}"'
+                query = f'UPDATE {self.table} SET _get = NOW() WHERE {_id} = "{result[0][0]}"'
                 cursor.execute(query)
-                db.commit()
+        self.moveToMain(filenames, 0)
+
+    def moveToMain(self, filenames, i):
+        if i == len(filenames):
+            return -1
+        else:
+            if filenames[i] != ".DS_Store":
+                convert_filename = filenames[i].split("@")
+                if convert_filename[0] == "AG2" and filenames[i] in os.listdir(self.directory) and convert_filename[-1].split(".")[-1] == "log":
+                    shutil.move(f"{self.directory}{filenames[i]}", f"{self._lpath}{filenames[i]}")
+                    return self.moveToMain(filenames, (i+1))
+                elif convert_filename[0] == "AG2" and filenames[i] in os.listdir(self.directory) and convert_filename[-1].split(".")[-1] in ["csv", "xlsx", "xls"]:
+                    shutil.move(f"{self.directory}{filenames[i]}", f"{self._dpath}{filenames[i]}")
+                    return self.moveToMain(filenames, (i+1))
+                else:
+                    return self.moveToMain(filenames, (i+1))
+            else:
+                return self.moveToMain(filenames, (i+1))
