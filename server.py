@@ -7,6 +7,7 @@ import os
 import shutil
 import time
 import datetime
+import netifaces as ni
 from module import cert, listen
 #======================================================
 # Settings from config
@@ -56,13 +57,14 @@ if __name__ == "__main__":
     create = ["listen", "client"]
     LIST_PATH = os.listdir(__location__)
     # setting socket
-    SERVER=socket.gethostbyname_ex(socket.gethostname())[-1]
+    #SERVER=socket.gethostbyname_ex(socket.gethostname())[-1]
+    SERVER=ni.ifaddresses('en0')[ni.AF_INET][0]['addr']
     CONFIG=[]
     # of after running
     setConfig(__location__, __ssl__, create, LIST_PATH, CONFIG)
     print("[STARTING] server is starting...")
     #print(CONFIG[10:-7]) # CheckDB
-    while SERVER[-1] == "127.0.0.1" or SERVER[-1] == "localhost":
+    while SERVER == "127.0.0.1" or SERVER == "localhost" or not(SERVER and SERVER.strip()):
         print("[Errno] Unknow ip ethernet wait for 15 seconds script rebooting.")
         time.sleep(5)
-    start(__location__, SERVER[-1], CONFIG, __ssl__)
+    start(__location__, SERVER, CONFIG, __ssl__)
