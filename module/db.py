@@ -52,8 +52,10 @@ class testConnect:
             cursor = mydb.cursor()
             cursor.execute('SHOW TABLES;')
             result = cursor.fetchall()
-            result = [x[0].decode('utf-8') for x in result]
-            #result = np.asarray(result)
+            try:
+                result = [x[0].decode('utf-8') for x in result]
+            except (UnicodeDecodeError, AttributeError):
+                result = np.asarray(result)
             table = {}
             for i in result:
                 cursor.execute(f"SHOW CREATE TABLE {i};")
