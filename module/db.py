@@ -40,6 +40,7 @@ class testConnect:
         self.database = db
 
     def mySql(self):
+        print(self.host,self.username,self.password,self.database)
         try:
             mydb = mysql.connector.connect(
                 host = self.host,
@@ -51,10 +52,11 @@ class testConnect:
             cursor = mydb.cursor()
             cursor.execute('SHOW TABLES;')
             result = cursor.fetchall()
-            result = np.asarray(result)
+            result = [x[0].decode('utf-8') for x in result]
+            #result = np.asarray(result)
             table = {}
             for i in result:
-                cursor.execute(f"SHOW CREATE TABLE {i[0]};")
+                cursor.execute(f"SHOW CREATE TABLE {i};")
                 res = cursor.fetchall()
                 res = np.asarray(res[0])[1].split("\n")
                 res.pop(-1)
@@ -66,6 +68,7 @@ class testConnect:
                             table[name] = []
                         else:
                             table[name].append(res[j].split("`")[1])
+            print(table)
             return str(json.dumps(table))
         except Exception as e:
             return str(e)
