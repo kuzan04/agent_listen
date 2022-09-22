@@ -40,7 +40,6 @@ class testConnect:
         self.database = db
 
     def mySql(self):
-        print(self.host,self.username,self.password,self.database)
         try:
             mydb = mysql.connector.connect(
                 host = self.host,
@@ -54,23 +53,36 @@ class testConnect:
             result = cursor.fetchall()
             try:
                 result = [x[0].decode('utf-8') for x in result]
+                table = {}
+                for i in result:
+                    cursor.execute(f"SHOW CREATE TABLE {i};")
+                    res = cursor.fetchall()
+                    res = np.asarray(res[0])[1].split("\n")
+                    res.pop(-1)
+                    name = ""
+                    for j in range(len(res)):
+                        if "KEY" not in res[j]:
+                            if j == 0:
+                                name = res[j].split("`")[1]
+                                table[name] = []
+                            else:
+                                table[name].append(res[j].split("`")[1])
             except (UnicodeDecodeError, AttributeError):
                 result = np.asarray(result)
-            table = {}
-            for i in result:
-                cursor.execute(f"SHOW CREATE TABLE {i};")
-                res = cursor.fetchall()
-                res = np.asarray(res[0])[1].split("\n")
-                res.pop(-1)
-                name = ""
-                for j in range(len(res)):
-                    if "KEY" not in res[j]:
-                        if j == 0:
-                            name = res[j].split("`")[1]
-                            table[name] = []
-                        else:
-                            table[name].append(res[j].split("`")[1])
-            print(table)
+                table = {}
+                for i in result:
+                    cursor.execute(f"SHOW CREATE TABLE {i[0]};")
+                    res = cursor.fetchall()
+                    res = np.asarray(res[0])[1].split("\n")
+                    res.pop(-1)
+                    name = ""
+                    for j in range(len(res)):
+                        if "KEY" not in res[j]:
+                            if j == 0:
+                                name = res[j].split("`")[1]
+                                table[name] = []
+                            else:
+                                table[name].append(res[j].split("`")[1])
             return str(json.dumps(table))
         except Exception as e:
             return str(e)
