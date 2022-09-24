@@ -130,11 +130,16 @@ class DBcheck:
     def equalSum(self, old, i, a):
         if i == len(self.val):
             return a
-        elif self.val[i] == old[i]:
-            return self.equalSum(old, (i+1), a)
         else:
-            a.append(i)
-            return self.equalSum(old, (i+1), a)
+            _old = list(old[i]).pop();
+            _old_ = tuple(_old)
+            if self.val[i] == _old_:
+                return self.equalSum(old, (i+1), a)
+            elif self.val[i] == _old_:
+                a.append(i)
+                return self.equalSum(old, (i+1), a)
+            else:
+                pass
 
     def insertMore(self, db, old, column, i):
         cursor = db.cursor()
@@ -261,8 +266,8 @@ class DBcheck:
             self.insertMore(db, res, truly_column, 0)
         elif len(res) == len(self.val):
             current_index = self.equalSum(res, 0, [])
-            for x in current_index:
-                self.update(db, res, x, truly_column.split(","), 0)
+            #for x in current_index:
+            #    self.update(db, res, x, truly_column.split(","), 0)
         elif len(res) > len(self.val):
             count = 0
             again = self.delete(db, res, truly_column.split(","), 0, 0)
