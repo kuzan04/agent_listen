@@ -1,0 +1,13 @@
+setuptools
+
+[docs]
+Sphinx
+
+[test]
+zope.testing
+zope.testrunner
+
+[testing]
+zope.testing
+zope.testrunner
+coverage
