@@ -44,7 +44,7 @@ def setConfig(__location__, __ssl__, create, LIST_PATH, CONFIG):
 # Set to start listening
 #======================================================
 def start(local, ip, config, sl):
-    server = listen.SSLServer(local, ip, int(config[0]), sl[0], sl[1], sl[-2], config).connect()
+    server = listen.SSLServer(local, ip, int(config[0]), sl[0], sl[1], sl[-2], config).connect(mysql.connector.connect(host=self.init[1], user=self.init[2], password=self.init[3], database=self.init[4], auth_plugin = "mysql_native_password"))
     s_thread = listen.SSLServerThread(server)
     s_thread.start()
 #======================================================
