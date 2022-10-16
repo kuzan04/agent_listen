@@ -21,7 +21,7 @@ class SSLServer:
         #self._status = {"AG1":0,"AG2":0,"AG3":0,"AG4":0}
         #self._cli = {"AG1":[], "AG2":[], "AG3":[], "AG4":[]}
 
-    def connect(self):
+    def connect(self, log):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.bind((self.host, self.port))
             sock.listen()
@@ -30,7 +30,7 @@ class SSLServer:
                 while True:
                     conn, _ = sock.accept()
                     with self._context.wrap_socket(conn, server_side=True) as sconn:
-                        self._recv(sconn)
+                        self._recv(sconn, log)
             except KeyboardInterrupt:
                 print("\nCaught keyboard interrupt, exiting")
             finally:
@@ -52,7 +52,7 @@ class SSLServer:
         else:
             return self.find_tuple(_tuple, mark, c, (i+1))
 
-    def _recv(self, sock):
+    def _recv(self, sock, manage):
         while True:
             msg = sock.recv(self.chunk_size).decode()
             if msg:
@@ -62,7 +62,6 @@ class SSLServer:
                     msg = msg.split('|')
                     sock.send(db.testConnect(msg[0], msg[1], msg[2], msg[-2], msg[-1]).connect().encode("utf-8"))
                 elif "#" in msg:
-                    manage = mysql.connector.connect(host=self.init[1], user=self.init[2], password=self.init[3], database=self.init[4], auth_plugin = "mysql_native_password")
                     cur_manage = manage.cursor()
                     cur_manage.execute("SELECT pam.agm_id, pam.agm_name, pas.code FROM TB_TR_PDPA_AGENT_MANAGE as pam JOIN TB_TR_PDPA_AGENT_STORE as pas ON pam.ags_id = pas.ags_id;")
                     res_manage = cur_manage.fetchall()
@@ -112,6 +111,6 @@ class SSLServerThread(Thread):
 
     def run(self):
         try:
-            self._server.connect()
+            self._server.connect(mysql.connector.connect(host=self.init[1], user=self.init[2], password=self.init[3], database=self.init[4], auth_plugin = "mysql_native_password"))
         except Exception:
             pass
