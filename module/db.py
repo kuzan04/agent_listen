@@ -7,21 +7,11 @@ import numpy as np
 import datetime
 
 class status:
-    def __init__(self, host, user, passwd, db):
-        self.host = host
-        self.username = user
-        self.password = passwd
-        self.database = db
+    def __init__(self, conn):
+        self._connect = conn
 
     def get(self):
-        conn = mysql.connector.connect(
-            host = self.host,
-            user = self.username,
-            password = self.password,
-            database = self.database,
-            auth_plugin = "mysql_native_password"
-        )
-        cursor = conn.cursor()
+        cursor = self._connect.cursor()
         cursor.execute('SELECT code, status FROM TB_TR_PDPA_AGENT_STORE;')
         return self.convertTupleToSet(cursor.fetchall())
 
@@ -117,11 +107,8 @@ class testConnect:
             return self.oracleDB()
 
 class DBcheck:
-    def __init__(self, host, user, passwd, db, tb, content):
-        self.host = host
-        self.username = user
-        self.password = passwd
-        self.database = db
+    def __init__(self, conn, tb, content):
+        self._connect = conn
         self._from = content[0]
         self.table = tb.split(":")[0]
         self.column = tb.split(":")[-1]
@@ -141,16 +128,16 @@ class DBcheck:
             else:
                 pass
 
-    def insertMore(self, db, old, column, i):
-        cursor = db.cursor()
+    def insertMore(self, old, column, i):
+        cursor = self._connect.cursor()
         try:
             if i == len(self.val):
                 return -1
             elif old[i] == self.val[i]:
-                return self.insertMore(db, old, column, (i+1))
+                return self.insertMore(old, column, (i+1))
             else:
-                self.update(db, old, i, column.split(","), 0)
-                return self.insertMore(db, old, column, (i+1))
+                self.update(old, i, column.split(","), 0)
+                return self.insertMore(old, column, (i+1))
         except IndexError:
                 if i == len(self.val):
                     return -1
@@ -161,11 +148,11 @@ class DBcheck:
                     val = tuple(val)
                     query = f"INSERT INTO {self.table} ({column}) VALUE {val};"
                     cursor.execute(query)
-                    db.commit()
-                    return self.insertMore(db, old, column, (i+1))
+                    self._connect.commit()
+                    return self.insertMore(old, column, (i+1))
 
-    def update(self, db, old, mark, column, i):
-        cursor = db.cursor()
+    def update(self, old, mark, column, i):
+        cursor = self._connect.cursor()
         val = self.val[mark]+(self._from,)
         val = list(val)
         val = [str(x) for x in val]
@@ -176,23 +163,23 @@ class DBcheck:
             elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
                 query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}";'
                 cursor.execute(query)
-                db.commit()
-                return self.update(db, old, mark, column, (i+1))
+                self._connect.commit()
+                return self.update(old, mark, column, (i+1))
             elif old[mark][0] != val[0]:
                 column = ",".join(column)
                 query = f'INSERT INTO {self.table} ({column}) VALUE {val};'
                 cursor.execute(query)
-                db.commit()
+                self._connect.commit()
             else:
-                return self.update(db, old, mark, column, (i+1))
+                return self.update(old, mark, column, (i+1))
         except IndexError:
             column = ",".join(column)
             query = f'INSERT INTO {self.table} ({column}) VALUE {val};'
             cursor.execute(query)
-            db.commit()
+            self._connect.commit()
 
-    def delete(self, db, old, column, i, j):
-        cursor = db.cursor()
+    def delete(self, old, column, i, j):
+        cursor = self._connect.cursor()
         conv_column = ",".join(column)
         try:
             if len(old) != 0:
@@ -206,7 +193,7 @@ class DBcheck:
                     cursor.execute(f'SELECT {conv_column} FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}";')
                     mark = cursor.fetchall()
                     if j == len(val):
-                        return self.delete(db, old, column, (i+1), j)
+                        return self.delete(old, column, (i+1), j)
                     elif old[i][j] != val[j] and j == 0:
                         if len(mark) > 1:
                             cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC;')
@@ -215,24 +202,24 @@ class DBcheck:
                                 if y != len(_id):
                                     query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}";'
                                     cursor.execute(query)
-                                    db.commit()
+                                    self._connect.commit()
                                 else:
                                     pass
-                        return self.delete(db, old, column, (i+1), j)
+                        return self.delete(old, column, (i+1), j)
                     elif old[i][j] == val[j] and j != 0:
                         query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}";'
                         cursor.execute(query)
-                        db.commit()
-                        return self.delete(db, old, column, i, (j+1))
+                        self._connect.commit()
+                        return self.delete(old, column, i, (j+1))
                     else:
-                        return self.delete(db, old, column, (i+1), j)
+                        return self.delete(old, column, (i+1), j)
             else:
                 return 0
         except IndexError:
             return -1
 
-    def overSize(self, db, column, i):
-        cursor = db.cursor()
+    def overSize(self, column, i):
+        cursor = self._connect.cursor()
         if i == len(self.val):
             return -1
         else:
@@ -245,11 +232,11 @@ class DBcheck:
             mark = cursor.fetchall()
             if len(mark) == 0:
                 cursor.execute(f"INSERT INTO {self.table} ({column}) VALUE {val};")
-                db.commit()
-            return self.overSize(db, column, (i+1))
+                self._connect.commit()
+            return self.overSize(column, (i+1))
 
-    def process(self, db):
-        cursor = db.cursor()
+    def connect(self):
+        cursor = self._connect.cursor()
         column = self.column.split(",")
         set_str = ["%s" for _ in range(len(self.val[0])+1)]
         set_str = ",".join(set_str)
@@ -261,34 +248,21 @@ class DBcheck:
             query = f"INSERT INTO {self.table} ({truly_column}) VALUES ({set_str});"
             self.val = [x+(self._from,) for x in self.val]
             cursor.executemany(query, self.val)
-            db.commit()
+            self._connect.commit()
         elif len(res) < len(self.val):
-            self.insertMore(db, res, truly_column, 0)
+            self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val):
             current_index = self.equalSum(res, 0, [])
-            #for x in current_index:
-            #    self.update(db, res, x, truly_column.split(","), 0)
         elif len(res) > len(self.val):
             count = 0
-            again = self.delete(db, res, truly_column.split(","), 0, 0)
+            again = self.delete(res, truly_column.split(","), 0, 0)
             while again >= 50:
                 count+=1
-                again = self.delete(db, res[(again*count):], truly_column.split(","), 0, 0)
+                again = self.delete(res[(again*count):], truly_column.split(","), 0, 0)
             else:
                 if again == 0:
-                    self.overSize(db, truly_column, 0)
+                    self.overSize(truly_column, 0)
                 else:
                     pass
         else:
             pass
-
-    def connect(self):
-        main = mysql.connector.connect(
-            host = self.host,
-            user = self.username,
-            password = self.password,
-            database = self.database,
-            auth_plugin = "mysql_native_password",
-            sql_mode = 'IGNORE_SPACE'
-        )
-        self.process(main)

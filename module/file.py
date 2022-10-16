@@ -8,11 +8,8 @@ from os.path import isfile, join
 import mysql.connector
 
 class fileDirectory:
-    def __init__(self, host, user, passwd, db, tb, _dir, cftp, val):
-        self.host = host
-        self.username = user
-        self.password = passwd
-        self.database = db
+    def __init__(self, conn, tb, _dir, cftp, val):
+        self._connect = conn
         self.table = tb.split(":")[0]
         self.column = tb.split(":")[-1]
         self.directory = _dir
@@ -35,14 +32,7 @@ class fileDirectory:
             return self.findNameFile(re+a_file[i].split("@")[-1]+"@", a_file, (i+1))
 
     def insertDataFile(self):
-        db = mysql.connector.connect(
-            host = self.host,
-            user = self.username,
-            password = self.password,
-            database = self.database,
-            auth_plugin = "mysql_native_password"
-        )
-        cursor = db.cursor()
+        cursor = self._connect.cursor()
         cursor.execute(f"SELECT {self.column} FROM {self.table} ORDER BY id ASC;")
         result = cursor.fetchall()
         columns = ",".join(self.column.split(",")[1:])
@@ -50,11 +40,11 @@ class fileDirectory:
         if len(result) == 0:
             query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
             cursor.execute(query)
-            db.commit()
+            self._connect.commit()
         elif self.find_match(result, 0) == False and len(result) > 0:
             query = f"INSERT INTO {self.table} ({columns}) VALUES {tuple(iter(self.value))}"
             cursor.execute(query)
-            db.commit()
+            self._connect.commit()
         else:
             reverse = self.findNameFile("", filenames, 0).split("@")
             reverse.pop()
@@ -62,6 +52,7 @@ class fileDirectory:
                 _id = self.column.split(",")[0]
                 query = f'UPDATE {self.table} SET _get = NOW() WHERE {_id} = "{result[0][0]}"'
                 cursor.execute(query)
+                self._connect.commit()
         self.moveToMain(filenames, 0)
 
     def moveToMain(self, filenames, i):
