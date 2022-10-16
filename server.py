@@ -8,6 +8,7 @@ import shutil
 import time
 import datetime
 import netifaces as ni
+import mysql.connector
 from module import cert, listen
 #======================================================
 # Settings from config
