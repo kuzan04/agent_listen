@@ -11,7 +11,7 @@ class SSLServer:
         self._path = path
         self.host = host
         self.port = port
-        self.init = config[0:-7]
+        self.init = config
         self.history = self.init[-1]
         self.chunk_size = chunk_size
         self._context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -104,10 +104,11 @@ class SSLServer:
         sock.close()
 
 class SSLServerThread(Thread):
-    def __init__(self, server):
+    def __init__(self, server, config):
         super().__init__()
         self._server = server
         self.daemon = True
+        self.init = config
 
     def run(self):
         try:
