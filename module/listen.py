@@ -33,6 +33,7 @@ class SSLServer:
             except KeyboardInterrupt:
                 print("\nCaught keyboard interrupt, exiting")
             finally:
+                self._connect.close()
                 self.close(sock)
 
     def find_set_match(_set, _str, i):
