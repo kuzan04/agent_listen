@@ -46,8 +46,9 @@ def setConfig(__location__, __ssl__, create, LIST_PATH, CONFIG):
 #======================================================
 def start(local, ip, config, sl):
     reConfig = config[0:-7]
-    server = listen.SSLServer(local, ip, int(reConfig[0]), sl[0], sl[1], sl[-2], reConfig).connect(mysql.connector.connect(host=reConfig[1], user=reConfig[2], password=reConfig[3], database=reConfig[4], auth_plugin = "mysql_native_password"))
-    s_thread = listen.SSLServerThread(server, reConfig)
+    db_conn = mysql.connector.connect(host=reConfig[1], user=reConfig[2], password=reConfig[3], database=reConfig[4], auth_plugin = "mysql_native_password", sql_mode = 'IGNORE_SPACE')
+    server = listen.SSLServer(local, ip, reConfig, sl[0], sl[1], sl[-2], db_conn).connect()
+    s_thread = listen.SSLServerThread(server)
     s_thread.start()
 #======================================================
 # Start listen
