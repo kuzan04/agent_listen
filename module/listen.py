@@ -33,7 +33,6 @@ class SSLServer:
             except KeyboardInterrupt:
                 print("\nCaught keyboard interrupt, exiting")
             finally:
-                self._connect.close()
                 self.close(sock)
 
     def find_set_match(_set, _str, i):
@@ -76,21 +75,18 @@ class SSLServer:
                         selected = self.find_tuple(res_manage, mark, "AG1", 0)
                         cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
                         self._connect.commit()
-                        self._connect.close()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
                         mark, _ = msg_detail.pop(0), msg_detail.pop()
                         file.fileDirectory(self._connect, self.init[-3], self.init[5], self.init[6:-4], msg_detail).insertDataFile()
                         selected = self.find_tuple(res_manage, mark, "AG2", 0)
                         cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
                         self._connect.commit()
-                        self._connect.close()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3": # Success.
                         mark = msg_detail.pop(0)
                         db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2], msg_detail).connect() #self.init[-2:-1]
                         selected = self.find_tuple(res_manage, mark, "AG3", 0)
                         cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
                         self._connect.commit()
-                        self._connect.close()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
                         pass
                     else:
@@ -100,7 +96,6 @@ class SSLServer:
                 elif "!DISCONNECT" in msg:
                     self.close(sock)
             else:
-                self._connect.close()
                 break
 
     def close(self, sock):
