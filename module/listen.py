@@ -83,7 +83,7 @@ class SSLServer:
                         self._connect.commit()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3": # Success.
                         mark = msg_detail.pop(0)
-                        db.DBcheck(self.init[1], self.init[2], self.init[3], self.init[4], self.init[-2], msg_detail).connect() #self.init[-2:-1]
+                        db.DBcheck(self._connect, self.init[-2], msg_detail).connect() #self.init[-2:-1]
                         selected = self.find_tuple(res_manage, mark, "AG3", 0)
                         cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
                         self._connect.commit()
