@@ -4,6 +4,7 @@ import ssl
 import os
 import json
 from threading import Thread
+from itertools import chain
 from module import log, file, db
 
 class SSLServer:
@@ -51,6 +52,14 @@ class SSLServer:
         else:
             return self.find_tuple(_tuple, mark, c, (i+1))
 
+    def find_tuple1(self, _t, a, i):
+        if i == len(a):
+            return -1
+        elif list(_t)[0] == a[i]:
+            return i
+        else:
+            return self.find_tuple1(_t, a, (i+1))
+
     def _recv(self, sock):
         while True:
             msg = sock.recv(self.chunk_size).decode()
@@ -69,28 +78,34 @@ class SSLServer:
                     status = db.status(self._connect).get()
                     msg_conv = msg.split("#")
                     msg_detail = msg_conv[-1].split("|||")
+                    select = ""
                     if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1": # Success
                         mark = msg_detail.pop(0)
                         log.Log0Hash(self._database, self.init[-4], msg_detail).insertDataHash()
                         selected = self.find_tuple(res_manage, mark, "AG1", 0)
-                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
-                        self._connect.commit()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
                         mark, _ = msg_detail.pop(0), msg_detail.pop()
                         file.fileDirectory(self._connect, self.init[-3], self.init[5], self.init[6:-4], msg_detail).insertDataFile()
                         selected = self.find_tuple(res_manage, mark, "AG2", 0)
-                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
-                        self._connect.commit()
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3": # Success.
                         mark = msg_detail.pop(0)
                         db.DBcheck(self._connect, self.init[-2], msg_detail).connect() #self.init[-2:-1]
                         selected = self.find_tuple(res_manage, mark, "AG3", 0)
-                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
-                        self._connect.commit()
-                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
-                        pass
+                    #elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
+                    #    pass
                     else:
                         pass
+                    #
+                    cur_manage.execute('SELECT agm_id FROM TB_TR_PDPA_AGENT_LISTEN_HISTORY GROUP BY agm_id;')
+                    find_history = [list(x) for x in cur_manage.fetchall()]
+                    find_history = list(chain.from_iterable(find_history))
+                    idx = self.find_tuple1(selected, find_history, 0)
+                    if idx == -1:
+                        cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
+                        self._connect.commit()
+                    else:
+                        cur_manage.execute(f"UPDATE FROM {table_history} SET _get_ = NOW() WHERE agm_id = {find_history[idx]};")
+                        self._connect.commit()
                 elif "!CHECK" in msg:
                     print("Ok")
                 elif "!DISCONNECT" in msg:
