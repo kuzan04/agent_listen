@@ -81,7 +81,7 @@ class SSLServer:
                     select = ""
                     if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1": # Success
                         mark = msg_detail.pop(0)
-                        log.Log0Hash(self._database, self.init[-4], msg_detail).insertDataHash()
+                        log.Log0Hash(self._connect, self.init[-4], msg_detail).insertDataHash()
                         selected = self.find_tuple(res_manage, mark, "AG1", 0)
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
                         mark, _ = msg_detail.pop(0), msg_detail.pop()
