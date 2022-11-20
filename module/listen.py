@@ -66,7 +66,7 @@ class SSLServer:
             if msg:
                 if "|" in msg and "#" not in msg:
                     msg = msg.split("|")
-                    msg = "|".join(msg[0:-1])
+                    msg = "|".join(msg)
                     msg = msg.split('|')
                     sock.send(db.testConnect(msg[0], msg[1], msg[2], msg[-2], msg[-1]).connect().encode("utf-8"))
                 elif "#" in msg:
