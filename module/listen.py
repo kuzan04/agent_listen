@@ -1,8 +1,5 @@
 import socket
-import mysql.connector
 import ssl
-import os
-import json
 from threading import Thread
 from itertools import chain
 from module import log, file, db
@@ -35,14 +32,6 @@ class SSLServer:
                 print("\nCaught keyboard interrupt, exiting")
             finally:
                 self.close(sock)
-
-    def find_set_match(_set, _str, i):
-        if i == len(_set):
-            return -1
-        elif _set[i][2] != _str:
-            return find_set_match(_set, _str, (i+1))
-        elif _set[i][2] == _str:
-            return i
 
     def find_tuple(self, _tuple, mark, c, i):
         if i == len(_tuple):
@@ -78,24 +67,21 @@ class SSLServer:
                     status = db.status(self._connect).get()
                     msg_conv = msg.split("#")
                     msg_detail = msg_conv[-1].split("|||")
-                    select = ""
-                    if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1": # Success
+                    selected = ()
+                    if status[msg_conv[0]] == 1 and msg_conv[0] == "AG1":
                         mark = msg_detail.pop(0)
                         log.Log0Hash(self._connect, self.init[-4], msg_detail).insertDataHash()
                         selected = self.find_tuple(res_manage, mark, "AG1", 0)
-                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2": # Success.
+                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG2":
                         mark, _ = msg_detail.pop(0), msg_detail.pop()
                         file.fileDirectory(self._connect, self.init[-3], self.init[5], self.init[6:-4], msg_detail).insertDataFile()
                         selected = self.find_tuple(res_manage, mark, "AG2", 0)
-                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3": # Success.
+                    elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3":
                         mark = msg_detail.pop(0)
-                        db.DBcheck(self._connect, self.init[-2], msg_detail).connect() #self.init[-2:-1]
+                        db.DBcheck(self._connect, self.init[-2], msg_detail).connect()
                         selected = self.find_tuple(res_manage, mark, "AG3", 0)
-                    #elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG4": # Success.
-                    #    pass
                     else:
                         pass
-                    #
                     cur_manage.execute('SELECT agm_id FROM TB_TR_PDPA_AGENT_LISTEN_HISTORY GROUP BY agm_id;')
                     find_history = [list(x) for x in cur_manage.fetchall()]
                     find_history = list(chain.from_iterable(find_history))

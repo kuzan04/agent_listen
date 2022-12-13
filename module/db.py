@@ -1,10 +1,8 @@
 import mysql.connector
 import cx_Oracle
-import re
 import json
-import datetime
 import numpy as np
-import datetime
+
 
 class status:
     def __init__(self, conn):
@@ -20,6 +18,7 @@ class status:
         for i in fetch:
             _status[i[0]] = i[1]
         return _status
+
 
 class testConnect:
     def __init__(self, _type, host, user, passwd, db):
@@ -105,6 +104,7 @@ class testConnect:
             return self.mySql()
         else:
             return self.oracleDB()
+
 
 class DBcheck:
     def __init__(self, conn, tb, content):
