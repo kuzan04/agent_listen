@@ -40,9 +40,9 @@ class testConnect:
             cursor = mydb.cursor()
             cursor.execute('SHOW TABLES;')
             result = cursor.fetchall()
+            table = {}
             try:
                 result = [x[0].decode('utf-8') for x in result]
-                table = {}
                 for i in result:
                     cursor.execute(f"SHOW CREATE TABLE {i};")
                     res = cursor.fetchall()
@@ -58,7 +58,6 @@ class testConnect:
                                 table[name].append(res[j].split("`")[1])
             except (UnicodeDecodeError, AttributeError):
                 result = np.asarray(result)
-                table = {}
                 for i in result:
                     cursor.execute(f"SHOW CREATE TABLE {i[0]};")
                     res = cursor.fetchall()
@@ -72,7 +71,8 @@ class testConnect:
                                 table[name] = []
                             else:
                                 table[name].append(res[j].split("`")[1])
-            return str(json.dumps(table))
+            finally:
+                return str(json.dumps(table))
         except Exception as e:
             return str(e)
 
@@ -84,18 +84,19 @@ class testConnect:
                 service_name=self.database
             )
             myConn = cx_Oracle.connect(
-                user = self.username,
-                password = self.password,
+                user=self.username,
+                password=self.password,
                 dsn=dsn
             )
             c = myConn.cursor()
             c.execute("SELECT table_name FROM user_tables;")
             res = c.fetchall()
-            table = []
+            table = {}
             for i in res:
-                c.execute(f"DESC {i[0]}")
-                table.append(f'{c.fetchall()}')
-            return str(table)
+                c.execute(f'SELECT * FROM {i[0]}')
+                col = [c[0] for c in c.description]
+                table[i[0]] = col
+            return str(json.dumps(table))
         except Exception as e:
             return str(e)
 
