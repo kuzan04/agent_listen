@@ -89,7 +89,7 @@ class testConnect:
                 dsn=dsn
             )
             c = myConn.cursor()
-            c.execute("SELECT table_name FROM all_tables;")
+            c.execute("SELECT table_name FROM user_tables;")
             res = c.fetchall()
             table = []
             for i in res:

@@ -62,6 +62,7 @@ class SSLServer:
                     cur_manage = self._connect.cursor()
                     cur_manage.execute("SELECT pam.agm_id, pam.agm_name, pas.code FROM TB_TR_PDPA_AGENT_MANAGE as pam JOIN TB_TR_PDPA_AGENT_STORE as pas ON pam.ags_id = pas.ags_id;")
                     res_manage = cur_manage.fetchall()
+                    self._connect.commit()
                     table_history = self.history.split(":")[0]
                     column_history = self.history.split(":")[-1]
                     status = db.status(self._connect).get()
