@@ -1,5 +1,3 @@
-import mysql.connector
-
 class Log0Hash:
     def __init__(self, conn, table, content):
         self._connect = conn
