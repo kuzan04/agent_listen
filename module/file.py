@@ -1,11 +1,6 @@
-import pwd
-import grp
 import os
 import shutil
 from os import walk
-from os import listdir
-from os.path import isfile, join
-import mysql.connector
 
 class fileDirectory:
     def __init__(self, conn, tb, _dir, cftp, val):
