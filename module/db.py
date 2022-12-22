@@ -1,3 +1,5 @@
+import os
+import sys
 import mysql.connector
 import cx_Oracle
 import json
@@ -77,7 +79,10 @@ class testConnect:
             return str(e)
 
     def oracleDB(self):
-        #cx_Oracle.init_oracle_client(config_dir="")
+        '''if sys.platform == 'linux' or sys.platform == 'linux2':
+            cx_Oracle.init_oracle_client(config_dir=os.path.join(os.path.abspath(os.path.dirname(__file__)), "config/instantclient_19_10_ARM64"))
+        elif sys.platform == 'win32':
+            cx_Oracle.init_oracle_client(config_dir=os.path.join(os.path.abspath(os.path.dirname(__file__)), "config/instantclient_21_8_x86_64"))'''
         try:
             dsn = cx_Oracle.makedsn(
                 self.host,
@@ -87,7 +92,8 @@ class testConnect:
             myConn = cx_Oracle.connect(
                 user=self.username,
                 password=self.password,
-                dsn=dsn
+                dsn=dsn,
+                encoding="UTF-8"
             )
             c = myConn.cursor()
             c.execute("SELECT table_name FROM user_tables;")
@@ -108,7 +114,7 @@ class testConnect:
             return self.oracleDB()
 
 
-class DBcheck:
+class DBCheck:
     def __init__(self, conn, tb, content):
         self._connect = conn
         self._from = content[0]

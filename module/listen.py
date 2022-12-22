@@ -79,7 +79,7 @@ class SSLServer:
                         selected = self.find_tuple(res_manage, mark, "AG2", 0)
                     elif status[msg_conv[0]] == 1 and msg_conv[0] == "AG3":
                         mark = msg_detail.pop(0)
-                        db.DBcheck(self._connect, self.init[-2], msg_detail).connect()
+                        db.DBCheck(self._connect, self.init[-2], msg_detail).connect()
                         selected = self.find_tuple(res_manage, mark, "AG3", 0)
                     else:
                         pass
