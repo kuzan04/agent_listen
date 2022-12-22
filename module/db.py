@@ -1,5 +1,5 @@
-import os
-import sys
+#import os
+#import sys
 import mysql.connector
 import cx_Oracle
 import json
@@ -252,6 +252,7 @@ class DBCheck:
         # Statement(2) UP
         cursor.execute(f'SELECT {truly_column} FROM {self.table} WHERE {column[-1]} = "{self._from}"')
         res = cursor.fetchall()
+        self._connect.commit()
         if len(res) == 0:
             query = f"INSERT INTO {self.table} ({truly_column}) VALUES ({set_str})"
             self.val = [x+(self._from,) for x in self.val]
