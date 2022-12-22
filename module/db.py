@@ -77,6 +77,7 @@ class testConnect:
             return str(e)
 
     def oracleDB(self):
+        #cx_Oracle.init_oracle_client(config_dir="")
         try:
             dsn = cx_Oracle.makedsn(
                 self.host,
