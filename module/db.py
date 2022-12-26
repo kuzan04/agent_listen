@@ -127,6 +127,7 @@ class DBCheck:
             return a
         else:
             old = list(old[i])
+            print(old)
             old.pop()
             _old_ = tuple(old)
             if self.val[i] == _old_:
