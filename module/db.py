@@ -123,14 +123,12 @@ class DBCheck:
         self.val = eval(content[-1])
 
     def equalSum(self, old, i, a):
-        print(self.val, old[i])
         if i == len(self.val):
             return a
         else:
             old = list(old[i])
             old.pop()
             _old_ = tuple(old)
-            print(self.val[i], _old_)
             if self.val[i] == _old_:
                 return self.equalSum(old, (i+1), a)
             elif self.val[i] != _old_:
@@ -267,6 +265,7 @@ class DBCheck:
             print(res, "\n", self.val)
             #self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val):
+            print(res, self.val)
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
                 print(current_index)
