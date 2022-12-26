@@ -126,7 +126,7 @@ class DBCheck:
         if i == len(self.val):
             return a
         else:
-            print(old)
+            print(old[i])
             #old.pop()
             #_old_ = tuple(old)
             #print(_old_)
