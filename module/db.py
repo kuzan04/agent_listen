@@ -126,18 +126,16 @@ class DBCheck:
         if i == len(self.val):
             return a
         else:
-            print(list(old[i]))
-            #old.pop()
-            #_old_ = tuple(old)
-            #print(_old_)
-            return self.equalSum(old, (i+1), a)
-            '''if self.val[i] == _old_:
+            _old = list(old[i])
+            _old.pop()
+            _old_ = tuple(_old)
+            if self.val[i] == _old_:
                 return self.equalSum(old, (i+1), a)
             elif self.val[i] != _old_:
                 a.append(i)
                 return self.equalSum(old, (i+1), a)
             else:
-                pass'''
+                pass
 
     def insertMore(self, old, column, i):
         cursor = self._connect.cursor()
