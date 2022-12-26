@@ -214,6 +214,7 @@ class DBCheck:
                             cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
                             _id = cursor.fetchall()
                             self._connect.commit()
+                            print(_id)
                             for y in range(len(_id)):
                                 if y != len(_id):
                                     print(y)
