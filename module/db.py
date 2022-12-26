@@ -181,12 +181,12 @@ class DBCheck:
             return -1
         elif old[mark][i] != val[i]:
             mix = self._set(column[:-1], val, 0)
-            print(mix)
             query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
             cursor.execute(query)
             self._connect.commit()
             return 0
         else:
+            print(old[mark][i], val[i])
             return self.update(old, mark, column, (i+1))
 
     def delete(self, old, column, i, j):
