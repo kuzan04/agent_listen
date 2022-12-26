@@ -141,13 +141,15 @@ class DBCheck:
     def insertMore(self, old, column, i):
         cursor = self._connect.cursor()
         try:
-            old[0] = int(old[i])
+            _old = list(old[i])
+            _old.pop()
+            _old[0] = int(_old[0])
             if i == len(self.val):
                 return -1
-            elif old[i] == self.val[i]:
+            elif tuple(_old) == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
-                print(old[i], self.val[i])
+                print(tuple(_old), self.val[i])
                 #self.update(old, i, column.split(","), 0)
                 return self.insertMore(old, column, (i+1))
         except IndexError:
