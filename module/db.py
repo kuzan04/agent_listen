@@ -126,11 +126,13 @@ class DBCheck:
         if i == len(self.val):
             return a
         else:
-            _old = list(old[i]).pop()
+            _old = list(old[i])
+            _old.pop() 
+            _old[0] = int(_old[0])
             _old_ = tuple(_old)
             if self.val[i] == _old_:
                 return self.equalSum(old, (i+1), a)
-            elif self.val[i] == _old_:
+            elif self.val[i] != _old_:
                 a.append(i)
                 return self.equalSum(old, (i+1), a)
             else:
@@ -139,25 +141,36 @@ class DBCheck:
     def insertMore(self, old, column, i):
         cursor = self._connect.cursor()
         try:
+            _old = list(old[i])
+            _old.pop()
+            _old[0] = int(_old[0])
+            _old = tuple(_old)
             if i == len(self.val):
                 return -1
-            elif old[i] == self.val[i]:
+            elif _old == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
                 self.update(old, i, column.split(","), 0)
-                return self.insertMore(old, column, (i+1))
+                self.insertMore(old, column, (i+1))
         except IndexError:
-                if i == len(self.val):
-                    return -1
-                else:
-                    val = self.val[i]+(self._from,)
-                    val = list(val)
-                    val = [str(x) for x in val]
-                    val = tuple(val)
-                    query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
-                    cursor.execute(query)
-                    self._connect.commit()
-                    return self.insertMore(old, column, (i+1))
+            if i == len(self.val):
+                return -1
+            else:
+                val = self.val[i]+(self._from,)
+                val = list(val)
+                val = [str(x) for x in val]
+                val = tuple(val)
+                query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
+                cursor.execute(query)
+                self._connect.commit()
+                return self.insertMore(old, column, (i+1))
+
+    def _set(self, mx, c, i):
+        if i == (len(mx)+len(c))/2:
+            return mx
+        else:
+            mx[i] = f"{mx[i]} = '{c[i]}'"
+            return self._set(mx, c, (i+1))
 
     def update(self, old, mark, column, i):
         cursor = self._connect.cursor()
@@ -165,26 +178,16 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        try:
-            if i == len(old):
-                return -1
-            elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
-                query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}"'
-                cursor.execute(query)
-                self._connect.commit()
-                return self.update(old, mark, column, (i+1))
-            elif old[mark][0] != val[0]:
-                column = ",".join(column)
-                query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
-                cursor.execute(query)
-                self._connect.commit()
-            else:
-                return self.update(old, mark, column, (i+1))
-        except IndexError:
-            column = ",".join(column)
-            query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
+        if i == len(val):
+            return -1
+        elif old[mark][i] != val[i]:
+            mix = self._set(column[:-1], val[:-1], 0)
+            query = f'UPDATE {self.table} SET {", ".join(mix)} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
             cursor.execute(query)
             self._connect.commit()
+            return self.update(old, mark, column, (i+1))
+        else:
+            return self.update(old, mark, column, (i+1))
 
     def delete(self, old, column, i, j):
         cursor = self._connect.cursor()
@@ -200,21 +203,22 @@ class DBCheck:
                     val = tuple(val)
                     cursor.execute(f'SELECT {conv_column} FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}"')
                     mark = cursor.fetchall()
+                    self._connect.commit()
                     if j == len(val):
                         return self.delete(old, column, (i+1), j)
                     elif old[i][j] != val[j] and j == 0:
-                        if len(mark) > 1:
-                            cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
+                        if len(mark) > 0:
+                            cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{old[i][0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
                             _id = cursor.fetchall()
-                            for y in range(len(_id)):
-                                if y != len(_id):
-                                    query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}"'
-                                    cursor.execute(query)
-                                    self._connect.commit()
-                                else:
-                                    pass
+                            self._connect.commit()
+                            for y in _id:
+                                query = f'DELETE FROM {self.table} WHERE id = "{y[0]}"'
+                                cursor.execute(query)
+                                self._connect.commit()
+                        else:
+                            pass
                         return self.delete(old, column, (i+1), j)
-                    elif old[i][j] == val[j] and j != 0:
+                    elif old[i][0] == val[0] and old[i][j] != val[j] and j != 0:
                         query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}"'
                         cursor.execute(query)
                         self._connect.commit()
@@ -248,7 +252,7 @@ class DBCheck:
         column = self.column.split(",")
         set_str = ["%s" for _ in range(len(self.val[0])+1)]
         set_str = ",".join(set_str)
-        truly_column = ",".join(column[0:len(self.val[0])]) + f",{column[-1]}"
+        truly_column = ",".join(column[:len(self.val[0])]) + f",{column[-1]}"
         # Statement(2) UP
         cursor.execute(f'SELECT {truly_column} FROM {self.table} WHERE {column[-1]} = "{self._from}"')
         res = cursor.fetchall()
@@ -259,17 +263,17 @@ class DBCheck:
             cursor.executemany(query, self.val)
             self._connect.commit()
         elif len(res) < len(self.val):
-            #self.insertMore(res, truly_column, 0)
-        elif len(res) == len(self.val): # Hold
-            #current_index = self.equalSum(res, 0, [])
+            self.insertMore(res, truly_column, 0)
+        elif len(res) == len(self.val):
+            current_index = self.equalSum(res, 0, [])
+            if current_index is not None:
+                for i in current_index:
+                    self.update(res, i, truly_column.split(","), 0)
         elif len(res) > len(self.val):
-            '''count = 0
+            count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
             while again >= 50:
-                count+=1
+                count += 1
                 again = self.delete(res[(again*count):], truly_column.split(","), 0, 0)
-            else:
-                if again == 0:
-                    self.overSize(truly_column, 0)
-                else:
-                    pass'''
+            if again == 0:
+                self.overSize(truly_column, 0)
