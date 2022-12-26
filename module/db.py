@@ -209,7 +209,7 @@ class DBCheck:
                     if j == len(val):
                         return self.delete(old, column, (i+1), j)
                     elif old[i][j] != val[j] and j == 0:
-                        if len(mark) > 1:
+                        if len(mark) > 0:
                             cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
                             _id = cursor.fetchall()
                             self._connect.commit()
