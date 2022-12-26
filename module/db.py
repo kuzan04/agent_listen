@@ -171,6 +171,7 @@ class DBCheck:
             if i == len(old):
                 return -1
             elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
+                print(0)
                 query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}"'
                 cursor.execute(query)
                 self._connect.commit()
