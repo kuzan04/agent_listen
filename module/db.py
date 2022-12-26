@@ -165,7 +165,9 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        try:
+        print(old, mark, column, i)
+        return self.update(old, mark, column, (i+1))
+        '''try:
             if i == len(old):
                 return -1
             elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
@@ -184,7 +186,7 @@ class DBCheck:
             column = ",".join(column)
             query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
             cursor.execute(query)
-            self._connect.commit()
+            self._connect.commit()'''
 
     def delete(self, old, column, i, j):
         cursor = self._connect.cursor()
@@ -263,7 +265,8 @@ class DBCheck:
             #self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val): # Hold
             current_index = self.equalSum(res, 0, [])
-            print(current_index)
+            if current_index is not None:
+                print(res, self.val)
         elif len(res) > len(self.val):
             print(res, "\n", self.val)
             '''count = 0
