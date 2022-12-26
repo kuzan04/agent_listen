@@ -180,6 +180,7 @@ class DBCheck:
         if i == len(val):
             return -1
         elif old[mark][i] != val[i]:
+            print(column[-1])
             mix = self._set(column[:-1], val, 0)
             print(mix)
             query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
