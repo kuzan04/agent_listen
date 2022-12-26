@@ -143,6 +143,7 @@ class DBCheck:
             _old = list(old[i])
             _old.pop()
             _old[0] = int(_old[0])
+            print(_old)
             if i == len(self.val):
                 return -1
             elif tuple(_old) == self.val[i]:
