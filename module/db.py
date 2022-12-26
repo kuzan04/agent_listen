@@ -146,10 +146,11 @@ class DBCheck:
             elif old[i] == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
-                self.update(old, i, column.split(","), 0)
+                print(old[i], self.val[i])
+                #self.update(old, i, column.split(","), 0)
                 return self.insertMore(old, column, (i+1))
         except IndexError:
-                if i == len(self.val):
+                '''if i == len(self.val):
                     return -1
                 else:
                     val = self.val[i]+(self._from,)
@@ -159,7 +160,7 @@ class DBCheck:
                     query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
                     cursor.execute(query)
                     self._connect.commit()
-                    return self.insertMore(old, column, (i+1))
+                    return self.insertMore(old, column, (i+1))'''
 
     def update(self, old, mark, column, i):
         cursor = self._connect.cursor()
@@ -171,27 +172,22 @@ class DBCheck:
             if i == len(val):
                 return -1
             elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
-                print(0)
                 query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}"'
                 cursor.execute(query)
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
-            elif old[mark][i] != val[i] and i == 0:
-                print(1)
-                '''column = ",".join(column)
+            elif old[mark][i] != val[i]:
+                column = ",".join(column)
                 query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
                 cursor.execute(query)
-                self._connect.commit()'''
-            elif old[mark][i] != val[i] and i != 0:
-                print(column)
+                self._connect.commit()
             else:
                 return self.update(old, mark, column, (i+1))
         except IndexError:
-            print('indexError')
-            '''column = ",".join(column)
+            column = ",".join(column)
             query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
             cursor.execute(query)
-            self._connect.commit()'''
+            self._connect.commit()
 
     def delete(self, old, column, i, j):
         cursor = self._connect.cursor()
@@ -266,8 +262,7 @@ class DBCheck:
             cursor.executemany(query, self.val)
             self._connect.commit()
         elif len(res) < len(self.val):
-            print(0)
-            #self.insertMore(res, truly_column, 0)
+            self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val):
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
