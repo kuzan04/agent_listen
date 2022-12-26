@@ -183,7 +183,9 @@ class DBCheck:
         elif old[mark][i] != val[i]:
             mix = ", ".join(self._set(column[:-1], val[:-1], 0))
             query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
-            cursor.execute(query)
+            print(mix, "\n", query)
+            #cursor.execute(query)
+            #self._connect.commit()
             return self.update(old, mark, column, (i+1))
         else:
             return self.update(old, mark, column, (i+1))
