@@ -169,8 +169,8 @@ class DBCheck:
         if i == (len(mx)+len(c))/2:
             return mx
         else:
-            mx[i] = f"{mx[i]} = '{str(c[i])}'"
-            print(mx[i])
+            print(mx[i], c[i])
+            mx[i] = f"{mx[i]} = '{c[i]}'"
             return self._set(mx, c, (i+1))
 
     def update(self, old, mark, column, i):
