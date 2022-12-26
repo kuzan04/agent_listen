@@ -164,6 +164,13 @@ class DBCheck:
                 self._connect.commit()
                 return self.insertMore(old, column, (i+1))
 
+    def _set(self, mx, c, i):
+        if i == (len(mx)+len(c))/2:
+            return mx
+        else:
+            mx[i] = mx[i] + " = " + c[i]
+            return self._set(mx, c, (i+1))
+
     def update(self, old, mark, column, i):
         cursor = self._connect.cursor()
         val = self.val[mark]+(self._from,)
@@ -174,8 +181,8 @@ class DBCheck:
             if i == len(val):
                 return -1
             elif old[mark][i] != val[i]:
-                query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
-                print(query)
+                mix = self._set(column[:-1], val, 0)
+                query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
                 cursor.execute(query)
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
@@ -206,7 +213,7 @@ class DBCheck:
                         return self.delete(old, column, (i+1), j)
                     elif old[i][j] != val[j] and j == 0:
                         if len(mark) > 0:
-                            cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
+                            cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{old[i][0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
                             _id = cursor.fetchall()
                             self._connect.commit()
                             for y in _id:
