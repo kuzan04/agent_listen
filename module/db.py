@@ -129,13 +129,14 @@ class DBCheck:
             old = list(old[i])
             old.pop()
             _old_ = tuple(old)
-            if self.val[i] == _old_:
+            print(_old_)
+            '''if self.val[i] == _old_:
                 return self.equalSum(old, (i+1), a)
             elif self.val[i] != _old_:
                 a.append(i)
                 return self.equalSum(old, (i+1), a)
             else:
-                pass
+                pass'''
 
     def insertMore(self, old, column, i):
         cursor = self._connect.cursor()
@@ -265,7 +266,6 @@ class DBCheck:
             print(res, "\n", self.val)
             #self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val):
-            print(res, self.val)
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
                 print(current_index)
