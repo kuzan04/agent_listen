@@ -175,6 +175,7 @@ class DBCheck:
                 return -1
             elif old[mark][i] != val[i] and i != 0:
                 query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}"'
+                print(query)
                 cursor.execute(query)
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
