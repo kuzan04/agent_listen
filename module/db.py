@@ -177,27 +177,17 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        try:
-            if i == len(val):
-                return -1
-            elif old[mark][i] != val[i]:
-                mix = self._set(column[:-1], val, 0)
-                print(mix)
-                query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
-                cursor.execute(query)
-                return self.update(old, mark, column, (i+1))
-            else:
-                return self.update(old, mark, column, (i+1))
-        except IndexError:
-            print(old[mark][i], val[i])
-            '''val = self.val[i]+(self._from,)
-            val = list(val)
-            val = [str(x) for x in val]
-            val = tuple(val)
-            query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
+        print(old[mark][i], val[i])
+        if i == len(val):
+            return -1
+        elif old[mark][i] != val[i]:
+            mix = self._set(column[:-1], val, 0)
+            print(mix)
+            query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
             cursor.execute(query)
-            self._connect.commit()
-            return self.insertMore(old, column, (i+1))'''
+            return self.update(old, mark, column, (i+1))
+        else:
+            return self.update(old, mark, column, (i+1))
 
     def delete(self, old, column, i, j):
         cursor = self._connect.cursor()
