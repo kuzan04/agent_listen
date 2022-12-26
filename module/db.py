@@ -177,19 +177,17 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        print(1)
-        if i == len(val):
+        print(i, len(val))
+        '''if i == len(val):
             return -1
         elif old[mark][i] != val[i]:
             mix = self._set(column[:-1], val, 0)
             query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
-            print(query)
             cursor.execute(query)
             self._connect.commit()
             return 0
         else:
-            print(i)
-            return self.update(old, mark, column, (i+1))
+            return self.update(old, mark, column, (i+1))'''
 
     def delete(self, old, column, i, j):
         cursor = self._connect.cursor()
