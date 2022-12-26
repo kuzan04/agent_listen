@@ -127,9 +127,10 @@ class DBCheck:
             return a
         else:
             old = list(old[i])
-            old.pop()
-            _old_ = tuple(old)
-            print(_old_)
+            print(old)
+            #old.pop()
+            #_old_ = tuple(old)
+            #print(_old_)
             return self.equalSum(old, (i+1), a)
             '''if self.val[i] == _old_:
                 return self.equalSum(old, (i+1), a)
