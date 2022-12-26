@@ -149,6 +149,7 @@ class DBCheck:
             elif _old == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
+                print(_old, self.val[i])
                 self.update(old, i, column.split(","), 0)
         except IndexError:
             if i == len(self.val):
