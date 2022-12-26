@@ -170,18 +170,18 @@ class DBCheck:
         try:
             if i == len(old):
                 return -1
-            elif int(old[mark][0]) == val[0] and old[mark][i] != val[i] and i != 0:
+            elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
                 query = f'UPDATE {self.table} SET {column[i]} = "{val[i]}" WHERE {column[0]} = {val[0]} AND {column[-1]} = "{self._from}"'
                 cursor.execute(query)
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
-            elif int(old[mark][i]) != val[i] and i == 0:
-                print(type(old[mark][i]), type(val[i]))
+            elif old[mark][i] != val[i] and i == 0:
+                print(1)
                 '''column = ",".join(column)
                 query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
                 cursor.execute(query)
                 self._connect.commit()'''
-            elif int(old[mark][i]) != val[i] and i != 0:
+            elif old[mark][i] != val[i] and i != 0:
                 print(column)
             else:
                 return self.update(old, mark, column, (i+1))
