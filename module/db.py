@@ -123,7 +123,7 @@ class DBCheck:
         self.val = eval(content[-1])
 
     def equalSum(self, old, i, a):
-        print(self.val[i], old)
+        print(self.val, old[i])
         if i == len(self.val):
             return a
         else:
