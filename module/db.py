@@ -185,7 +185,7 @@ class DBCheck:
             elif old[mark][i] != val[i] and i != 0:
                 print(column)
             else:
-                print(old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0)
+                print(old[mark][i], val[i])
                 return self.update(old, mark, column, (i+1))
         except IndexError:
             print('indexError')
