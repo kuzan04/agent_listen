@@ -228,7 +228,6 @@ class DBCheck:
             else:
                 return 0
         except IndexError:
-            print(1)
             return -1
 
     def overSize(self, column, i):
