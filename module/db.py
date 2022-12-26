@@ -176,6 +176,7 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
+        print(i)
         try:
             if i == len(val):
                 return -1
