@@ -139,6 +139,7 @@ class DBCheck:
                 pass
 
     def insertMore(self, old, column, i):
+        cursor = self._connect.cursor()
         try:
             _old = list(old[i])
             _old.pop()
@@ -155,14 +156,13 @@ class DBCheck:
             if i == len(self.val):
                 return -1
             else:
-                '''val = self.val[i]+(self._from,)
+                val = self.val[i]+(self._from,)
                 val = list(val)
                 val = [str(x) for x in val]
                 val = tuple(val)
                 query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
                 cursor.execute(query)
-                self._connect.commit()'''
-                print(i)
+                self._connect.commit()
                 return self.insertMore(old, column, (i+1))
 
     def _set(self, mx, c, i):
