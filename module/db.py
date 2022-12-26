@@ -266,7 +266,7 @@ class DBCheck:
         elif len(res) == len(self.val):
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
-                print(res, self.val)
+                print(self.val[current_index])
         elif len(res) > len(self.val):
             print(res, "\n", self.val)
             '''count = 0
