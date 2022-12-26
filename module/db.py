@@ -177,6 +177,7 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
+        print(old[mark][i], val[i])
         if i == len(val):
             return -1
         elif old[mark][i] != val[i]:
@@ -186,7 +187,6 @@ class DBCheck:
             self._connect.commit()
             return 0
         else:
-            print(old[mark][i], val[i])
             return self.update(old, mark, column, (i+1))
 
     def delete(self, old, column, i, j):
