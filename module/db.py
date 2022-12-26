@@ -149,20 +149,19 @@ class DBCheck:
                 return self.insertMore(old, column, (i+1))
             else:
                 self.update(old, i, column.split(","), 0)
-                return self.insertMore(old, column, (i+1))
         except IndexError:
             if i == len(self.val):
                 return -1
             else:
-                print(self.val[i])
                 '''val = self.val[i]+(self._from,)
                 val = list(val)
                 val = [str(x) for x in val]
                 val = tuple(val)
                 query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
                 cursor.execute(query)
-                self._connect.commit()
-                return self.insertMore(old, column, (i+1))'''
+                self._connect.commit()'''
+                print(i)
+                return self.insertMore(old, column, (i+1))
 
     def _set(self, mx, c, i):
         if i == (len(mx)+len(c))/2:
@@ -177,17 +176,26 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        if i == len(val):
-            return -1
-        elif old[mark][i] != val[i]:
-            mix = self._set(column[:-1], val, 0)
-            query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
+        try:
+            if i == len(val):
+                return -1
+            elif old[mark][i] != val[i]:
+                mix = self._set(column[:-1], val, 0)
+                query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
+                cursor.execute(query)
+                return self.update(old, mark, column, (i+1))
+            else:
+                return self.update(old, mark, column, (i+1))
+        except IndexError:
+            print(self.val[i])
+            '''val = self.val[i]+(self._from,)
+            val = list(val)
+            val = [str(x) for x in val]
+            val = tuple(val)
+            query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
             cursor.execute(query)
             self._connect.commit()
-            return 0
-        else:
-            print(i)
-            return self.update(old, mark, column, (i+1))
+            return self.insertMore(old, column, (i+1))'''
 
     def delete(self, old, column, i, j):
         cursor = self._connect.cursor()
