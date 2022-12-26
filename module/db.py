@@ -141,6 +141,7 @@ class DBCheck:
     def insertMore(self, old, column, i):
         cursor = self._connect.cursor()
         try:
+            old[0] = int(old[i])
             if i == len(self.val):
                 return -1
             elif old[i] == self.val[i]:
