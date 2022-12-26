@@ -170,6 +170,7 @@ class DBCheck:
             return mx
         else:
             mx[i] = f"{mx[i]} = '{c[i]}'"
+            print(mx[i])
             return self._set(mx, c, (i+1))
 
     def update(self, old, mark, column, i):
