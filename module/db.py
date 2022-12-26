@@ -178,11 +178,6 @@ class DBCheck:
                 cursor.execute(query)
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
-            elif old[mark][i] != val[i]:
-                column = ",".join(column)
-                query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
-                cursor.execute(query)
-                self._connect.commit()
             else:
                 return self.update(old, mark, column, (i+1))
         except IndexError:
