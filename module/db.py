@@ -213,14 +213,10 @@ class DBCheck:
                             cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
                             _id = cursor.fetchall()
                             self._connect.commit()
-                            print(_id)
-                            for y in range(len(_id)):
-                                if y != len(_id):
-                                    query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}"'
-                                    cursor.execute(query)
-                                    self._connect.commit()
-                                else:
-                                    pass
+                            for y in _id:
+                                query = f'DELETE FROM {self.table} WHERE id = "{y[0]}"'
+                                cursor.execute(query)
+                                self._connect.commit()
                         else:
                             pass
                         return self.delete(old, column, (i+1), j)
