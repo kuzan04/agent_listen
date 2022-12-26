@@ -130,6 +130,7 @@ class DBCheck:
             old.pop()
             _old_ = tuple(old)
             print(_old_)
+            return self.equalSum(old, (i+1), a)
             '''if self.val[i] == _old_:
                 return self.equalSum(old, (i+1), a)
             elif self.val[i] != _old_:
