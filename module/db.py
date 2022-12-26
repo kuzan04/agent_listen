@@ -177,6 +177,7 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
+        print(1)
         if i == len(val):
             return -1
         elif old[mark][i] != val[i]:
