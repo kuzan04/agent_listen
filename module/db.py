@@ -169,7 +169,6 @@ class DBCheck:
         if i == (len(mx)+len(c))/2:
             return mx
         else:
-            print(mx[i], c[i])
             mx[i] = f"{mx[i]} = '{c[i]}'"
             return self._set(mx, c, (i+1))
 
@@ -270,7 +269,7 @@ class DBCheck:
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
                 for i in current_index:
-                    self.update(res, i, truly_column, 0)
+                    self.update(res, i, truly_column.split(","), 0)
         elif len(res) > len(self.val):
             count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
