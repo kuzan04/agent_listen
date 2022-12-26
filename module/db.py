@@ -168,7 +168,7 @@ class DBCheck:
         val = [str(x) for x in val]
         val = tuple(val)
         try:
-            if i == len(old):
+            if i == len(val):
                 return -1
             elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
                 print(0)
@@ -185,7 +185,6 @@ class DBCheck:
             elif old[mark][i] != val[i] and i != 0:
                 print(column)
             else:
-                print(old[mark], val[i])
                 return self.update(old, mark, column, (i+1))
         except IndexError:
             print('indexError')
