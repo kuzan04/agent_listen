@@ -259,10 +259,13 @@ class DBCheck:
             cursor.executemany(query, self.val)
             self._connect.commit()
         elif len(res) < len(self.val):
+            print(res, "\n", self.val)
             #self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val): # Hold
-            #current_index = self.equalSum(res, 0, [])
+            current_index = self.equalSum(res, 0, [])
+            print(current_index)
         elif len(res) > len(self.val):
+            print(res, "\n", self.val)
             '''count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
             while again >= 50:
