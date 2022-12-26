@@ -183,6 +183,7 @@ class DBCheck:
                 cursor.execute(query)
                 self._connect.commit()'''
             else:
+                print(old[mark][0], val[0], old[mark][i], val[i])
                 return self.update(old, mark, column, (i+1))
         except IndexError:
             print('indexError')
