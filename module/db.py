@@ -166,6 +166,7 @@ class DBCheck:
                 return self.insertMore(old, column, (i+1))
 
     def _set(self, mx, c, i):
+        print(mx, c)
         if i == (len(mx)+len(c))/2:
             return mx
         else:
