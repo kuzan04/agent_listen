@@ -149,21 +149,21 @@ class DBCheck:
             elif tuple(_old) == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
-                print(tuple(_old), self.val[i])
-                #self.update(old, i, column.split(","), 0)
+                self.update(old, i, column.split(","), 0)
                 return self.insertMore(old, column, (i+1))
         except IndexError:
-                '''if i == len(self.val):
-                    return -1
-                else:
-                    val = self.val[i]+(self._from,)
-                    val = list(val)
-                    val = [str(x) for x in val]
-                    val = tuple(val)
-                    query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
-                    cursor.execute(query)
-                    self._connect.commit()
-                    return self.insertMore(old, column, (i+1))'''
+            if i == len(self.val):
+                return -1
+            else:
+                val = self.val[i]+(self._from,)
+                val = list(val)
+                val = [str(x) for x in val]
+                val = tuple(val)
+                print(val)
+                '''query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
+                cursor.execute(query)
+                self._connect.commit()
+                return self.insertMore(old, column, (i+1))'''
 
     def update(self, old, mark, column, i):
         cursor = self._connect.cursor()
