@@ -205,24 +205,31 @@ class DBCheck:
                     val = tuple(val)
                     cursor.execute(f'SELECT {conv_column} FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}"')
                     mark = cursor.fetchall()
+                    self._connect.commit()
                     if j == len(val):
                         return self.delete(old, column, (i+1), j)
                     elif old[i][j] != val[j] and j == 0:
+                        print(mark, old[i][j], val[j])
                         if len(mark) > 1:
                             cursor.execute(f'SELECT id FROM {self.table} WHERE {column[0]} = "{val[0]}" AND {column[-1]} = "{self._from}" ORDER BY id ASC')
                             _id = cursor.fetchall()
+                            self._connect.commit()
                             for y in range(len(_id)):
                                 if y != len(_id):
-                                    query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}"'
-                                    cursor.execute(query)
-                                    self._connect.commit()
+                                    print(y)
+                                    #query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}"'
+                                    #cursor.execute(query)
+                                    #self._connect.commit()
                                 else:
                                     pass
+                        else:
+                            pass
                         return self.delete(old, column, (i+1), j)
                     elif old[i][j] == val[j] and j != 0:
-                        query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}"'
-                        cursor.execute(query)
-                        self._connect.commit()
+                        print(1)
+                        #query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}"'
+                        #cursor.execute(query)
+                        #self._connect.commit()
                         return self.delete(old, column, i, (j+1))
                     else:
                         return self.delete(old, column, (i+1), j)
@@ -253,7 +260,7 @@ class DBCheck:
         column = self.column.split(",")
         set_str = ["%s" for _ in range(len(self.val[0])+1)]
         set_str = ",".join(set_str)
-        truly_column = ",".join(column[0:len(self.val[0])]) + f",{column[-1]}"
+        truly_column = ",".join(column[:len(self.val[0])]) + f",{column[-1]}"
         # Statement(2) UP
         cursor.execute(f'SELECT {truly_column} FROM {self.table} WHERE {column[-1]} = "{self._from}"')
         res = cursor.fetchall()
@@ -271,14 +278,11 @@ class DBCheck:
                 for i in current_index:
                     self.update(res, i, column, 0)
         elif len(res) > len(self.val):
-            print(2)
-            '''count = 0
+            #count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
-            while again >= 50:
+            print(again)
+            '''while again >= 50:
                 count+=1
                 again = self.delete(res[(again*count):], truly_column.split(","), 0, 0)
-            else:
-                if again == 0:
-                    self.overSize(truly_column, 0)
-                else:
-                    pass'''
+            if again == 0:
+                self.overSize(truly_column, 0)'''
