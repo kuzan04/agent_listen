@@ -139,7 +139,7 @@ class DBCheck:
                 pass
 
     def insertMore(self, old, column, i):
-        #try:
+        try:
             _old = list(old[i])
             _old.pop()
             _old[0] = int(_old[0])
@@ -150,10 +150,11 @@ class DBCheck:
                 return self.insertMore(old, column, (i+1))
             else:
                 self.update(old, i, column.split(","), 0)
-        #except IndexError:
-            #if i == len(self.val):
-            #    return -1
-            #else:
+                self.insertMore(old, column, (i+1))
+        except IndexError:
+            if i == len(self.val):
+                return -1
+            else:
                 '''val = self.val[i]+(self._from,)
                 val = list(val)
                 val = [str(x) for x in val]
@@ -161,11 +162,10 @@ class DBCheck:
                 query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
                 cursor.execute(query)
                 self._connect.commit()'''
-            #    print(i)
-            #    return self.insertMore(old, column, (i+1))
+                print(i)
+                return self.insertMore(old, column, (i+1))
 
     def _set(self, mx, c, i):
-        print(mx, c, i)
         if i == (len(mx)+len(c))/2:
             return mx
         else:
@@ -181,8 +181,7 @@ class DBCheck:
         if i == len(val):
             return -1
         elif old[mark][i] != val[i]:
-            mix = self._set(column[:-1], val, 0)
-            print(mix)
+            mix = self._set(column[:-1], val[:-1], 0)
             query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
             cursor.execute(query)
             return self.update(old, mark, column, (i+1))
