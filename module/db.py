@@ -177,6 +177,7 @@ class DBCheck:
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
             elif old[mark][0] != val[0]:
+                print(old[mark][0], val[0])
                 '''column = ",".join(column)
                 query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
                 cursor.execute(query)
@@ -263,7 +264,7 @@ class DBCheck:
             cursor.executemany(query, self.val)
             self._connect.commit()
         elif len(res) < len(self.val):
-            print(res, "\n", self.val)
+            print(0)
             #self.insertMore(res, truly_column, 0)
         elif len(res) == len(self.val):
             current_index = self.equalSum(res, 0, [])
@@ -271,7 +272,7 @@ class DBCheck:
                 for i in current_index:
                     self.update(res, i, column, 0)
         elif len(res) > len(self.val):
-            print(res, "\n", self.val)
+            print(2)
             '''count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
             while again >= 50:
