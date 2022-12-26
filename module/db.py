@@ -148,7 +148,6 @@ class DBCheck:
             elif tuple(_old) == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
-                print(tuple(_old), self.val[i])
                 self.update(old, i, column.split(","), 0)
                 return self.insertMore(old, column, (i+1))
         except IndexError:
@@ -182,6 +181,7 @@ class DBCheck:
             return -1
         elif old[mark][i] != val[i]:
             mix = self._set(column[:-1], val, 0)
+            print(mix)
             query = f'UPDATE {self.table} SET {mix} WHERE {column[0]} = {old[mark][0]} AND {column[-1]} = "{self._from}"'
             cursor.execute(query)
             self._connect.commit()
