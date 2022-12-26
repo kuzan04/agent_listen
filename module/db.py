@@ -143,13 +143,12 @@ class DBCheck:
             _old = list(old[i])
             _old.pop()
             _old[0] = int(_old[0])
-            print(_old)
+            _old = tuple(_old)
             if i == len(self.val):
                 return -1
-            elif tuple(_old) == self.val[i]:
+            elif _old == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
-                print(tuple(old), self.val[i])
                 self.update(old, i, column.split(","), 0)
         except IndexError:
             if i == len(self.val):
