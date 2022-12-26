@@ -217,20 +217,18 @@ class DBCheck:
                             print(_id)
                             for y in range(len(_id)):
                                 if y != len(_id):
-                                    print(y)
-                                    #query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}"'
-                                    #cursor.execute(query)
-                                    #self._connect.commit()
+                                    query = f'DELETE FROM {self.table} WHERE id = "{_id[0]}"'
+                                    cursor.execute(query)
+                                    self._connect.commit()
                                 else:
                                     pass
                         else:
                             pass
                         return self.delete(old, column, (i+1), j)
-                    elif old[i][j] == val[j] and j != 0:
-                        print(1)
-                        #query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}"'
-                        #cursor.execute(query)
-                        #self._connect.commit()
+                    elif old[i][0] == val[0] and old[i][j] != val[j] and j != 0:
+                        query = f'UPDATE {self.table} SET {column[j]} = "{val[j]}" WHERE {column[0]} = {old[i][0]} AND {column[-1]} = "{self._from}"'
+                        cursor.execute(query)
+                        self._connect.commit()
                         return self.delete(old, column, i, (j+1))
                     else:
                         return self.delete(old, column, (i+1), j)
@@ -279,11 +277,10 @@ class DBCheck:
                 for i in current_index:
                     self.update(res, i, column, 0)
         elif len(res) > len(self.val):
-            #count = 0
+            count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
-            print(again)
-            '''while again >= 50:
-                count+=1
+            while again >= 50:
+                count += 1
                 again = self.delete(res[(again*count):], truly_column.split(","), 0, 0)
             if again == 0:
-                self.overSize(truly_column, 0)'''
+                self.overSize(truly_column, 0)
