@@ -149,7 +149,6 @@ class DBCheck:
             elif _old == self.val[i]:
                 return self.insertMore(old, column, (i+1))
             else:
-                print(_old, self.val[i])
                 self.update(old, i, column.split(","), 0)
         except IndexError:
             if i == len(self.val):
@@ -178,7 +177,6 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        print(i)
         try:
             if i == len(val):
                 return -1
@@ -191,8 +189,7 @@ class DBCheck:
             else:
                 return self.update(old, mark, column, (i+1))
         except IndexError:
-            #print(self.val[i])
-            print(1)
+            print(old[mark][i], val[i])
             '''val = self.val[i]+(self._from,)
             val = list(val)
             val = [str(x) for x in val]
