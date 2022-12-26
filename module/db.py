@@ -168,9 +168,7 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        print(val)
-        return self.update(old, mark, column, (i+1))
-        '''try:
+        try:
             if i == len(old):
                 return -1
             elif old[mark][0] == val[0] and old[mark][i] != val[i] and i != 0:
@@ -179,14 +177,15 @@ class DBCheck:
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
             elif old[mark][0] != val[0]:
-                column = ",".join(column)
+                '''column = ",".join(column)
                 query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
                 cursor.execute(query)
-                self._connect.commit()
+                self._connect.commit()'''
             else:
                 return self.update(old, mark, column, (i+1))
         except IndexError:
-            column = ",".join(column)
+            print('indexError')
+            '''column = ",".join(column)
             query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
             cursor.execute(query)
             self._connect.commit()'''
