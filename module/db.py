@@ -168,7 +168,7 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        print(old, mark, column, i)
+        print(val)
         return self.update(old, mark, column, (i+1))
         '''try:
             if i == len(old):
@@ -269,7 +269,8 @@ class DBCheck:
         elif len(res) == len(self.val):
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
-                print(current_index)
+                for i in current_index:
+                    self.update(res, i, column, 0)
         elif len(res) > len(self.val):
             print(res, "\n", self.val)
             '''count = 0
