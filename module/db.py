@@ -176,7 +176,7 @@ class DBCheck:
                 self._connect.commit()
                 return self.update(old, mark, column, (i+1))
             elif int(old[mark][i]) != val[i] and i == 0:
-                print(old[mark][i], val[i])
+                print(type(old[mark][i]), type(val[i]))
                 '''column = ",".join(column)
                 query = f'INSERT INTO {self.table} ({column}) VALUE {val}'
                 cursor.execute(query)
