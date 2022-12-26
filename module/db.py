@@ -178,7 +178,6 @@ class DBCheck:
         val = [str(x) for x in val]
         val = tuple(val)
         if i == len(val):
-            print(old[mark][i], val[i])
             return -1
         elif old[mark][i] != val[i]:
             mix = self._set(column[:-1], val, 0)
@@ -188,6 +187,7 @@ class DBCheck:
             self._connect.commit()
             return 0
         else:
+            print(i)
             return self.update(old, mark, column, (i+1))
 
     def delete(self, old, column, i, j):
