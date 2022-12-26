@@ -166,7 +166,6 @@ class DBCheck:
                 return self.insertMore(old, column, (i+1))
 
     def _set(self, mx, c, i):
-        print(mx, c)
         if i == (len(mx)+len(c))/2:
             return mx
         else:
@@ -270,7 +269,7 @@ class DBCheck:
             current_index = self.equalSum(res, 0, [])
             if current_index is not None:
                 for i in current_index:
-                    self.update(res, i, column, 0)
+                    self.update(res, i, truly_column, 0)
         elif len(res) > len(self.val):
             count = 0
             again = self.delete(res, truly_column.split(","), 0, 0)
