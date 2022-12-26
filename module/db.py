@@ -139,7 +139,7 @@ class DBCheck:
                 pass
 
     def insertMore(self, old, column, i):
-        try:
+        #try:
             _old = list(old[i])
             _old.pop()
             _old[0] = int(_old[0])
@@ -150,10 +150,10 @@ class DBCheck:
                 return self.insertMore(old, column, (i+1))
             else:
                 self.update(old, i, column.split(","), 0)
-        except IndexError:
-            if i == len(self.val):
-                return -1
-            else:
+        #except IndexError:
+            #if i == len(self.val):
+            #    return -1
+            #else:
                 '''val = self.val[i]+(self._from,)
                 val = list(val)
                 val = [str(x) for x in val]
@@ -161,8 +161,8 @@ class DBCheck:
                 query = f"INSERT INTO {self.table} ({column}) VALUE {val}"
                 cursor.execute(query)
                 self._connect.commit()'''
-                print(i)
-                return self.insertMore(old, column, (i+1))
+            #    print(i)
+            #    return self.insertMore(old, column, (i+1))
 
     def _set(self, mx, c, i):
         if i == (len(mx)+len(c))/2:
@@ -177,7 +177,6 @@ class DBCheck:
         val = list(val)
         val = [str(x) for x in val]
         val = tuple(val)
-        print(old[mark][i], val[i])
         if i == len(val):
             return -1
         elif old[mark][i] != val[i]:
@@ -228,6 +227,7 @@ class DBCheck:
             else:
                 return 0
         except IndexError:
+            print(1)
             return -1
 
     def overSize(self, column, i):
