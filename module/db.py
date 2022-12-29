@@ -100,7 +100,7 @@ class testConnect:
             res = c.fetchall()
             table = {}
             for i in res:
-                if i[0].startswith("_") is False:
+                if i[0].find("TB"):
                     c.execute(f'SELECT * FROM {i[0]}')
                     col = [c[0] for c in c.description]
                     table[i[0]] = col
