@@ -100,9 +100,10 @@ class testConnect:
             res = c.fetchall()
             table = {}
             for i in res:
-                c.execute(f'SELECT * FROM {i[0]}')
-                col = [c[0] for c in c.description]
-                table[i[0]] = col
+                if i.startwith("_") is False:
+                    c.execute(f'SELECT * FROM {i[0]}')
+                    col = [c[0] for c in c.description]
+                    table[i[0]] = col
             return str(json.dumps(table))
         except Exception as e:
             return str(e)
