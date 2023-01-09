@@ -85,13 +85,14 @@ class SSLServer:
                         pass
                     cur_manage.execute('SELECT agm_id FROM TB_TR_PDPA_AGENT_LISTEN_HISTORY GROUP BY agm_id;')
                     find_history = [list(x) for x in cur_manage.fetchall()]
+                    self._connect.commit()
                     find_history = list(chain.from_iterable(find_history))
                     idx = self.find_tuple1(selected, find_history, 0)
                     if idx == -1:
                         cur_manage.execute(f"INSERT INTO {table_history} ({column_history}) VALUE ({selected[0]})")
                         self._connect.commit()
                     else:
-                        cur_manage.execute(f"UPDATE {table_history} SET _get_ = NOW() WHERE {column_history[0]} = {find_history[idx]};")
+                        cur_manage.execute(f"UPDATE {table_history} SET _get_ = NOW() WHERE {column_history[0]} = {find_history[idx]}")
                         self._connect.commit()
                 elif "!CHECK" in msg:
                     print("Ok")
