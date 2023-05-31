@@ -36,7 +36,10 @@ impl TestConnect {
                     .fetch_all(&pool)
                     .await.unwrap()
                     .into_iter()
-                    .map(|row| row.get(format!("Tables_in_{}", self.database.to_lowercase()).as_str()))
+                    .map(|row| match row.try_get(format!("Tables_in_{}", self.database).as_str()) {
+                        Ok(row) => row,
+                        Err(_) => row.get(format!("Tables_in_{}", self.database.to_lowercase()).as_str()),
+                    })
                     .collect();
                 let mut mix: Vec<Table> = vec![];
                 for i in tables {
