@@ -6,8 +6,7 @@ install:
 	cargo add chrono@0.4.24 -F "serde"
 	cargo add serde@1.0.163 -F "derive"
 	cargo add serde_json@1.0.96
-	cargo add r2d2-oracle@0.6.0 -F chrono
-	cargo add r2d2@0.8.10
+	cargo add oracle@0.5.7 -F "chrono stmt_without_lifetime aq_unstable"
 	cargo add sqlx@0.6.3 -F "runtime-async-std-native-tls mysql chrono"
 	cargo install cargo-watch@8.4.0
 
