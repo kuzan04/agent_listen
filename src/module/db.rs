@@ -88,7 +88,7 @@ impl TestConnect {
 
         let tables = self.oracle_query_table("SELECT table_name FROM user_tables", pool.clone()).await?;
         for i in tables {
-            self.oracle_query_column(format!("SELECT table_name, columns FROM USER_TAB_COLUMNS WHERE table_name = {}", i).as_str(), pool.clone()).await?;
+            self.oracle_query_column(format!("SELECT table_name, columns FROM user_tab_columns WHERE table_name = '{}'", i).as_str(), pool.clone()).await?;
         }
         Ok("Hello".to_string())
     }
