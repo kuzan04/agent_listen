@@ -8,7 +8,7 @@ use oracle::pool::{PoolBuilder, Pool as OraclePool};
 #[derive(Debug, Default, Serialize)]
 struct Table {
     name: String,
-    column: Vec<String>,
+    columns: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -49,7 +49,7 @@ impl TestConnect {
                         .into_iter()
                         .map(|row| row.get("Field"))
                         .collect();
-                    mix.push(Table { name: i, column: res });
+                    mix.push(Table { name: i, columns: res });
                 }
                 pool.close();
                 Ok(serde_json::to_string(&mix).unwrap())
@@ -93,11 +93,13 @@ impl TestConnect {
             .build()
             .unwrap();
 
+        let mut mix: Vec<Table> = vec![];
         let tables = self.oracle_query_table("SELECT table_name FROM user_tables", pool.clone()).await?;
         for i in tables {
-            let column = self.oracle_query_column(format!("SELECT column_table FROM all_tab_columns WHERE table_name = '{}'", i).as_str(), pool.clone()).await?;
-            println!("{:?}", column);
+            let column = self.oracle_query_column(format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}'", i).as_str(), pool.clone()).await?;
+            mix.push(Table{ name: i, columns: column});
         }
+        println!("{:?}", mix);
         Ok("Hello".to_string())
     }
 }
