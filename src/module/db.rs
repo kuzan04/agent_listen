@@ -71,16 +71,23 @@ impl TestConnect {
         Ok(result)
     }
 
-    async fn oracle_query_column(&self, query: &str, pool: OraclePool) -> Result<(), oracle::Error> {
+    async fn oracle_query_column(&self, query: &str, pool: OraclePool) -> Result<Vec<String>, oracle::Error> {
         let conn = pool.get()?;
-        let result = conn.query(query, &[])?;
-        println!("{:#?}", result);
-        Ok(())
+        let result: Vec<String> = conn.query(query, &[])?
+            .into_iter()
+            .map(|row| match row.expect("REASON").get(0) {
+                Ok(row) => row,
+                Err(e) => e.to_string(),
+            })
+            .collect();
+        conn.close()?;
+        Ok(result)
     }
 
     pub async fn oracle(&self) -> Result<String, oracle::Error> {
         //Set Oracle instant client.
         // std::env::set_var("LD_LIBRARY_PATH", "/Users/kuzan04/Desktop/instantclient_19_8/");
+        // Ok(err)
         let pool = PoolBuilder::new(self.user.as_str(), self.passwd.as_str(), format!("//{}:1521/{}", self.host, self.database).as_str())
             .max_connections(10)
             .build()
@@ -88,7 +95,8 @@ impl TestConnect {
 
         let tables = self.oracle_query_table("SELECT table_name FROM user_tables", pool.clone()).await?;
         for i in tables {
-            self.oracle_query_column(format!("SELECT table_name, columns FROM user_tab_columns WHERE table_name = '{}'", i).as_str(), pool.clone()).await?;
+            let column = self.oracle_query_column(format!("SELECT column_table FROM all_tab_columns WHERE table_name = '{}'", i).as_str(), pool.clone()).await?;
+            println!("{:?}", column);
         }
         Ok("Hello".to_string())
     }
