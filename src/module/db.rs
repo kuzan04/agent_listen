@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use sqlx::{mysql::MySqlPoolOptions, Row};
 use serde::Serialize;
-use oracle::pool::PoolBuilder;
+use oracle::pool::{PoolBuilder, Pool as OraclePool};
 
 // use crate::model::FilterMySqlTable;
 //
@@ -58,34 +58,38 @@ impl TestConnect {
         }
     }
 
-    async fn oracle_query(&self, query: &str) -> Result<Vec<String>, oracle::Error> {
+    async fn oracle_query_table(&self, query: &str, pool: OraclePool) -> Result<Vec<String>, oracle::Error> {
+        let conn = pool.get()?;
+        let result: Vec<String> = conn.query(query, &[])?
+            .into_iter()
+            .map(|row| match row.expect("REASON").get(0) {
+                Ok(row) => row,
+                Err(e) => e.to_string(),
+            })
+            .collect();
+        conn.close()?;
+        Ok(result)
+    }
+
+    async fn oracle_query_column(&self, query: &str, pool: OraclePool) -> Result<(), oracle::Error> {
+        let conn = pool.get()?;
+        let result = conn.query(query, &[])?;
+        println!("{:#?}", result);
+        Ok(())
+    }
+
+    pub async fn oracle(&self) -> Result<String, oracle::Error> {
         //Set Oracle instant client.
         // std::env::set_var("LD_LIBRARY_PATH", "/Users/kuzan04/Desktop/instantclient_19_8/");
         let pool = PoolBuilder::new(self.user.as_str(), self.passwd.as_str(), format!("//{}:1521/{}", self.host, self.database).as_str())
             .max_connections(10)
-            .build();
-        let result: Vec<String> = match pool {
-            Ok(conn) => {
-                let connection = conn.get()?;
-                let res: Vec<String> = connection.query(query, &[])?
-                    .into_iter()
-                    .map(|row| match row.expect("REASON").get(0) {
-                        Ok(row) => row,
-                        Err(e) => e.to_string(),
-                    })
-                    .collect();
-                connection.close()?;
-                res
-            },
-            Err(e) => vec![e.to_string()]
-        };
-        Ok(result)
-    }
+            .build()
+            .unwrap();
 
-    pub async fn oracle(&self) -> Result<String, oracle::Error> {
-        let tables = self.oracle_query("SELECT table_name FROM user_tables").await?;
-        let column = self.oracle_query(format!("DESC {}", tables[0]).as_str()).await?;
-        println!("{:?}", column);
+        let tables = self.oracle_query_table("SELECT table_name FROM user_tables", pool.clone()).await?;
+        for i in tables {
+            self.oracle_query_column(format!("SELECT table_name, columns FROM USER_TAB_COLUMNS WHERE table_name = {}", i).as_str(), pool.clone()).await?;
+        }
         Ok("Hello".to_string())
     }
 }
