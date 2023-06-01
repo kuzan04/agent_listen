@@ -2,7 +2,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net;
 use sqlx::{MySqlPool, FromRow};
 
-// use crate::module::log0::*;
+use crate::module::log0::LogHash;
 // use crate::module::file::*;
 use crate::module::db::TestConnect;
 // use crate::module::sniffer::*;
@@ -71,12 +71,23 @@ impl Recevie {
         result
     }
 
-    async fn main_task(status: bool, details: Vec<String>) -> String {
+    async fn main_task(status: bool, details: Vec<String>, db: MySqlPool) -> String {
         match status {
             true => {
                 match details[0].as_str() {
                     "AG1" => {
-                        format!("Hello {}", details[1])
+                        let mut log0_table_all: Vec<String> = dotenv::var("TB_LOG0").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LOG0_HASH:device_name, os_name, path, name_file, total_line, value, value_md5, value_sha1".to_string())
+                            .split(':')
+                            .map(|s| s.to_string())
+                            .collect();
+                        let log0_columns: Vec<String> = log0_table_all.pop().unwrap().split(',').map(|s| s.to_string()).collect();
+                        let log0_table = log0_table_all.pop().unwrap();
+                        let content = details[details.len() - 1].split("|||").map(|s| s.to_string()).collect::<Vec<String>>();
+
+                        match LogHash::new(db, log0_table, log0_columns, content).build().await {
+                            Ok(s) => s,
+                            Err(e) => e.to_string(),
+                        }
                     },
                     "AG2" => {
                         format!("Hello {}", details[1])
@@ -124,7 +135,7 @@ impl Recevie {
                             .map(|row| AgentStore::from_row(&row).unwrap())
                             .collect();
                         let conv_response = Self::split_string(&s, '#');
-                        message = Self::main_task(Self::status_store(result_store, conv_response[0].to_owned()), conv_response).await;
+                        message = Self::main_task(Self::status_store(result_store, conv_response[0].to_owned()), conv_response, db).await;
                         if let Err(error) = stream.write_all(message.as_bytes()).await {
                             println!("Failed to write to stream: {}", error);
                         }
