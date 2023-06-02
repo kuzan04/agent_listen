@@ -1,13 +1,14 @@
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net;
 use sqlx::{MySqlPool, FromRow};
+use std::path::Path;
 
 use crate::module::log0::LogHash;
-// use crate::module::file::*;
+use crate::module::file::FileDirectory;
 use crate::module::db::TestConnect;
 // use crate::module::sniffer::*;
 
-use crate::model::AgentStore;
+use crate::model::{AgentStore, AgentManage, AgentHistory};
 
 #[derive(Debug)]
 pub struct Recevie {
@@ -20,7 +21,7 @@ impl Recevie {
         Recevie { host, port }
     }
 
-    fn split_string(input: &str, delimiter: char) -> Vec<String> {
+    fn split_string(input: &str, delimiter: &str) -> Vec<String> {
         input.split(delimiter)
             .map(|s| s.to_string())
             .collect()
@@ -71,6 +72,68 @@ impl Recevie {
         result
     }
 
+    fn set_manage(manager: Vec<AgentManage>, code: String, name: String) -> Result<AgentManage, String> {
+        let mut i = 0;
+        let mut selected = AgentManage::default();
+        while i < manager.len() {
+            match manager[i].agm_name == name && manager[i].code == code {
+                true => selected = manager[i].clone(),
+                false => todo!(),
+            }
+            i += 1
+        }
+        if selected.agm_id == -1 && selected.agm_name == *"unknow".to_string() && selected.code == *"unknow".to_string() {
+            Err("Not Found".to_string())
+        } else{
+            Ok(selected)
+        }
+    }
+
+    async fn set_history(db: MySqlPool, manager: Vec<AgentManage>, code: String, name: String) -> String {
+        let env_history = Self::split_string(&dotenv::var("TB_HISTORY").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LISTEN_HISTORY:agm_id".to_string()), ":");
+        let history: Vec<AgentHistory> = sqlx::query(
+            format!(
+                "SELECT {} FROM {} GROUP BY {}",
+                env_history[1].clone(),
+                env_history[0].clone(),
+                env_history[1].clone()
+            ).as_str())
+            .fetch_all(&db)
+            .await.unwrap()
+            .into_iter()
+            .map(|row| AgentHistory::from_row(&row).unwrap())
+            .collect();
+        println!("{}, {}", code, name);
+        let selected = Self::set_manage(manager, code, name);
+        match selected {
+            Ok(agm) => {
+                let mut message = String::new();
+                let mut i = 0;
+                while i < history.len() {
+                    if history[i].agm_id == agm.agm_id {
+                        sqlx::query(format!("UPDATE {} SET _get_ = NOW() WHERE {} = ?", env_history[0], env_history[1]).as_str())
+                            .bind(agm.agm_id)
+                            .execute(&db)
+                            .await.unwrap();
+                        message = "Success".to_string()
+                    }
+                    i += 1
+                }
+                match message.chars().count() {
+                    0 => {
+                        sqlx::query(format!("INSERT INTO {} ({}) VALUES (?)", env_history[0], env_history[1]).as_str())
+                            .bind(agm.agm_id)
+                            .execute(&db)
+                            .await.unwrap();
+                        "Success".to_string()
+                    }
+                    _ => "Success".to_string(),
+                }
+            },
+            Err(err) => format!("[Error] {} agent client from web alltra", err)
+        }
+    }
+
     async fn main_task(status: bool, details: Vec<String>, db: MySqlPool) -> String {
         match status {
             true => {
@@ -90,7 +153,24 @@ impl Recevie {
                         }
                     },
                     "AG2" => {
-                        format!("Hello {}", details[1])
+                        let mut file_table_all: Vec<String> = dotenv::var("TB_FILE").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_FILE_DIR:id, device_name, os_name, path, name_file, size".to_string())
+                            .split(':')
+                            .map(|s| s.to_string())
+                            .collect();
+                        let file_columns: Vec<String> = file_table_all.pop().unwrap().split(',').map(|s| s.to_string()).collect();
+                        let file_table = file_table_all.pop().unwrap();
+                        let content = details[details.len() - 1].split("|||").map(|s| s.to_string()).collect::<Vec<String>>();
+
+                        FileDirectory::new(
+                            db,
+                            file_table, 
+                            file_columns, 
+                            Path::new(&dotenv::var("SOURCINATION").unwrap_or_else(|_| "/home/ftpuser/".to_string())), 
+                            Path::new(&dotenv::var("DESTINATION_LOG").unwrap_or_else(|_| "/home/ftpuser/".to_string())), 
+                            Path::new(&dotenv::var("DESTINATION_DOC").unwrap_or_else(|_| "/var/pdpa/agent/".to_string())), 
+                            content
+                        ).build().await;
+                        details[1].to_string()
                     },
                     "AG3" => {
                         format!("Hello {}", details[1])
@@ -118,7 +198,7 @@ impl Recevie {
                 match get_response {
                     // Statement test connection sql.
                     s if s.contains('|') && !s.contains('#') => {
-                        let conv_test = Self::split_string(&s, '|');
+                        let conv_test = Self::split_string(&s, "|");
                         // Call check type sql.
                         message = Self::test_connect(conv_test[0].to_owned(), conv_test[1].to_owned(), conv_test[2].to_owned(), conv_test[3].to_owned(), conv_test[4].to_owned()).await;
                         if let Err(error) = stream.write_all(message.as_bytes()).await {
@@ -128,14 +208,26 @@ impl Recevie {
                     // Statement main task process agent.
                     s if s.contains('#') => {
                         // Get query from agent store to check status.
-                        let result_store: Vec<AgentStore> = sqlx::query("SELECT * FROM TB_TR_PDPA_AGENT_STORE")
+                        let store: Vec<AgentStore> = sqlx::query("SELECT * FROM TB_TR_PDPA_AGENT_STORE")
                             .fetch_all(&db)
                             .await.unwrap()
                             .into_iter()
                             .map(|row| AgentStore::from_row(&row).unwrap())
                             .collect();
-                        let conv_response = Self::split_string(&s, '#');
-                        message = Self::main_task(Self::status_store(result_store, conv_response[0].to_owned()), conv_response, db).await;
+                        // Get query from agent manage to insert history.
+                        let manager: Vec<AgentManage> = sqlx::query("SELECT pam.agm_id, pam.agm_name, pas.code FROM TB_TR_PDPA_AGENT_MANAGE as pam JOIN TB_TR_PDPA_AGENT_STORE as pas ON pam.ags_id = pas.ags_id")
+                            .fetch_all(&db)
+                            .await.unwrap()
+                            .into_iter()
+                            .map(|row| AgentManage::from_row(&row).unwrap())
+                            .collect();
+                        // Convert message AG # Details to Vector.
+                        let response = Self::split_string(&s, "#");
+                        // Get AG_NAME after success.
+                        let result = Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()).await;
+                        // Set message to response client.
+                        // message = Self::set_history(db, manager, response[0].to_owned(), result).await;
+                        message = "Test".to_string();
                         if let Err(error) = stream.write_all(message.as_bytes()).await {
                             println!("Failed to write to stream: {}", error);
                         }
@@ -168,7 +260,7 @@ impl Recevie {
                     Self::handle_client(sock.0, cloned_db).await;
                 });
             } else {
-                eprintln!("Failed accepting connection!");
+                println!("Failed accepting connection!");
             }
         }
     }

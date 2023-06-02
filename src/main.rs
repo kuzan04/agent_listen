@@ -25,7 +25,7 @@ fn get_ip(name: String) -> String {
     let mut ip = String::new();
     if let Ok(interfaces) = get_if_addrs() {
         for interface in interfaces {
-            if !interface.is_loopback() && interface.name == name {
+            if !interface.is_loopback() && interface.name == name && interface.ip().is_ipv4() {
                 ip =  interface.ip().to_string();
                 break
             } else {
@@ -57,7 +57,9 @@ async fn main() {
             "Failed" => {
                 println!("Failed to retrieve interface addresses");
             },
-            _ => break ip = i,
+            _ => {
+                break ip = i
+            },
         }
     }
     // Main database to use.

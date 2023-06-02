@@ -24,32 +24,34 @@ impl FromRow<'_, MySqlRow> for AgentStore {
   }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 #[allow(non_snake_case)]
 pub struct AgentManage {
-  agm_id: i32,
-  agm_name: String,
-  ags_id: i32,
-  config_detail: String,
-  agm_token: String,
+  pub agm_id: i32,
+  pub agm_name: String,
+  pub code: String,
 }
 impl FromRow<'_, MySqlRow> for AgentManage {
   fn from_row(row: &MySqlRow) -> Result<Self, sqlx::Error> {
     let agm_id: i32 = row.try_get("agm_id")?;
     let agm_name: String = row.try_get("agm_name")?;
-    let ags_id: i32 = row.try_get("ags_id")?;
-    let config_detail: String = row.try_get("config_detail")?;
-    let agm_token: String = row.try_get("agm_token")?;
+    let code: String = row.try_get("code")?;
 
-    Ok(Self{ agm_id, agm_name, ags_id, config_detail, agm_token})
+    Ok(Self{ agm_id, agm_name, code })
   }
+}
+impl Default for AgentManage {
+    fn default() -> Self {
+        Self { agm_id: -1, agm_name: "unknow".to_string(), code: "unknow".to_string() }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 #[allow(non_snake_case)]
 pub struct AgentHistory {
-  agm_id: i32,
+  pub agm_id: i32,
 }
+
 impl FromRow<'_, MySqlRow> for AgentHistory {
   fn from_row(row: &MySqlRow) -> Result<Self, sqlx::Error> {
     let agm_id: i32 = row.try_get("agm_id")?;
