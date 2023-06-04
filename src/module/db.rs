@@ -1,10 +1,11 @@
 #![allow(dead_code)]
-use sqlx::{mysql::MySqlPoolOptions, Row};
+use sqlx::{
+    mysql::{MySqlPoolOptions, MySqlPool},
+    Row
+};
 use serde::Serialize;
 use oracle::pool::{PoolBuilder, Pool as OraclePool};
 
-// use crate::model::FilterMySqlTable;
-//
 #[derive(Debug, Default, Serialize)]
 struct Table {
     name: String,
@@ -94,5 +95,20 @@ impl TestConnect {
             }
             Err(e) => Ok(e.to_string())
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct DatabaseCheck {
+    connection: MySqlPool,
+    from: String,
+    table: String,
+    columns: Vec<String>,
+    content: Vec<String>
+}
+
+impl DatabaseCheck {
+    pub fn new(connection: MySqlPool, from: String, table: String, columns: Vec<String>, content: Vec<String>) -> Self {
+        Self { connection, from, table, columns, content }
     }
 }

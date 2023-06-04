@@ -4,7 +4,7 @@ use sqlx::{MySqlPool, FromRow};
 
 use crate::module::log0::LogHash;
 use crate::module::file::FileDirectory;
-use crate::module::db::TestConnect;
+use crate::module::db::{TestConnect, DatabaseCheck};
 
 use crate::model::{AgentStore, AgentManage, AgentHistory};
 
@@ -135,13 +135,13 @@ impl Recevie {
             true => {
                 match details[0].as_str() {
                     "AG1" => {
-                        let mut log0_table_all: Vec<String> = dotenv::var("TB_LOG0").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LOG0_HASH:device_name, os_name, path, name_file, total_line, value, value_md5, value_sha1".to_string())
-                            .split(':')
-                            .map(|s| s.to_string())
-                            .collect();
-                        let log0_columns: Vec<String> = log0_table_all.pop().unwrap().split(',').map(|s| s.to_string()).collect();
+                        let mut log0_table_all = Self::split_string(
+                            &dotenv::var("TB_LOG0").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LOG0_HASH:device_name, os_name, path, name_file, total_line, value, value_md5, value_sha1".to_string()),
+                            ":"
+                        );
+                        let log0_columns = Self::split_string(&log0_table_all.pop().unwrap(), ",");
                         let log0_table = log0_table_all.pop().unwrap();
-                        let content = details[details.len() - 1].split("|||").map(|s| s.to_string()).collect::<Vec<String>>();
+                        let content = Self::split_string(&details[details.len() - 1], "|||");
 
                         match LogHash::new(db, log0_table, log0_columns, content).build().await {
                             Ok(s) => s,
@@ -149,13 +149,13 @@ impl Recevie {
                         }
                     },
                     "AG2" => {
-                        let mut file_table_all: Vec<String> = dotenv::var("TB_FILE").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_FILE_DIR:id, device_name, os_name, path, name_file, size".to_string())
-                            .split(':')
-                            .map(|s| s.to_string())
-                            .collect();
-                        let file_columns: Vec<String> = file_table_all.pop().unwrap().split(',').map(|s| s.to_string()).collect();
+                        let mut file_table_all = Self::split_string(
+                            &dotenv::var("TB_FILE").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_FILE_DIR:id, device_name, os_name, path, name_file, size".to_string()),
+                            ":"
+                        );
+                        let file_columns = Self::split_string(&file_table_all.pop().unwrap(), ",");
                         let file_table = file_table_all.pop().unwrap();
-                        let content = details[details.len() - 1].split("|||").map(|s| s.to_string()).collect::<Vec<String>>();
+                        let content = Self::split_string(&details[details.len() - 1], "|||");
 
                         match FileDirectory::new(
                             db,
@@ -172,11 +172,21 @@ impl Recevie {
                             }
                     },
                     "AG3" => {
-                        format!("Hello {}", details[1])
+                        let mut dbc_table_all = Self::split_string(
+                            &dotenv::var("TB_DB")
+                            .unwrap_or_else(|_| "TB_TR_PDPA_AGENT_DATABASE_CHECK:field_1, field_2, field_3, field_4, field_5, field_6, field_7, field_8, field_9, field_0, from_client".to_string()),
+                            ":"
+                        );
+                        let dbc_columns = Self::split_string(&dbc_table_all.pop().unwrap(), ",");
+                        let dbc_table = dbc_table_all.pop().unwrap();
+                        let mut content = Self::split_string(&details[details.len() - 1], "|||");
+                        // Convert message from_client and values
+                        let from_client = content.remove(0);
+
+                        DatabaseCheck::new(db, from_client, dbc_table, dbc_columns, content);
+
+                        details[1].to_string()
                     },
-                    "AG4" => {
-                        format!("Hello {}", details[1])
-                    }
                     _ => {
                         "Failed".to_string()
                     }
@@ -224,8 +234,10 @@ impl Recevie {
                         let response = Self::split_string(&s, "#");
                         // Get AG_NAME after success.
                         let result = Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()).await;
+                        println!("{}", result);
                         // Set message to response client.
-                        message = Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
+                        // message = Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
+                        message = "Test".to_string();
                         if let Err(error) = stream.write_all(message.as_bytes()).await {
                             println!("Failed to write to stream: {}", error);
                         }
