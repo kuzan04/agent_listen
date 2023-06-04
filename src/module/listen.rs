@@ -1,12 +1,10 @@
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net;
 use sqlx::{MySqlPool, FromRow};
-use std::path::Path;
 
 use crate::module::log0::LogHash;
 use crate::module::file::FileDirectory;
 use crate::module::db::TestConnect;
-// use crate::module::sniffer::*;
 
 use crate::model::{AgentStore, AgentManage, AgentHistory};
 
@@ -76,9 +74,8 @@ impl Recevie {
         let mut i = 0;
         let mut selected = AgentManage::default();
         while i < manager.len() {
-            match manager[i].agm_name == name && manager[i].code == code {
-                true => selected = manager[i].clone(),
-                false => todo!(),
+            if manager[i].agm_name == name && manager[i].code == code {
+                selected = manager[i].clone();
             }
             i += 1
         }
@@ -103,7 +100,6 @@ impl Recevie {
             .into_iter()
             .map(|row| AgentHistory::from_row(&row).unwrap())
             .collect();
-        println!("{}, {}", code, name);
         let selected = Self::set_manage(manager, code, name);
         match selected {
             Ok(agm) => {
@@ -161,16 +157,19 @@ impl Recevie {
                         let file_table = file_table_all.pop().unwrap();
                         let content = details[details.len() - 1].split("|||").map(|s| s.to_string()).collect::<Vec<String>>();
 
-                        FileDirectory::new(
+                        match FileDirectory::new(
                             db,
                             file_table, 
                             file_columns, 
-                            Path::new(&dotenv::var("SOURCINATION").unwrap_or_else(|_| "/home/ftpuser/".to_string())), 
-                            Path::new(&dotenv::var("DESTINATION_LOG").unwrap_or_else(|_| "/home/ftpuser/".to_string())), 
-                            Path::new(&dotenv::var("DESTINATION_DOC").unwrap_or_else(|_| "/var/pdpa/agent/".to_string())), 
+                            dotenv::var("SOURCINATION").unwrap_or_else(|_| "/home/ftpuser/".to_string()), 
+                            dotenv::var("DESTINATION_LOG").unwrap_or_else(|_| "/home/ftpuser/".to_string()), 
+                            dotenv::var("DESTINATION_DOC").unwrap_or_else(|_| "/var/pdpa/agent/".to_string()), 
                             content
-                        ).build().await;
-                        details[1].to_string()
+                        ).build()
+                            .await {
+                                Ok(s) => s,
+                                Err(e) => e.to_string()
+                            }
                     },
                     "AG3" => {
                         format!("Hello {}", details[1])
@@ -226,8 +225,7 @@ impl Recevie {
                         // Get AG_NAME after success.
                         let result = Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()).await;
                         // Set message to response client.
-                        // message = Self::set_history(db, manager, response[0].to_owned(), result).await;
-                        message = "Test".to_string();
+                        message = Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
                         if let Err(error) = stream.write_all(message.as_bytes()).await {
                             println!("Failed to write to stream: {}", error);
                         }

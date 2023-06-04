@@ -12,20 +12,13 @@ impl LogHash {
         LogHash { connection, table, column, content }
     }
 
-    pub async fn build(&self) -> Result<String, Box<dyn std::error::Error>> {
-        let set_str = self.column.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-        let query = format!("INSERT INTO {} ({}) VALUES ({})", self.table, self.column.join(","), set_str);
+    pub async fn build(&mut self) -> Result<String, Box<dyn std::error::Error>> {
+        let name = self.content.remove(0);
+        let values = self.content.iter().map(|s| format!("\"{}\"", s)).collect::<Vec<String>>().join(",");
+        let query = format!("INSERT INTO {} ({}) VALUES ({})", self.table, self.column.join(","), values);
         sqlx::query(&query)
-            .bind(self.content[1].to_owned())
-            .bind(self.content[2].to_owned())
-            .bind(self.content[3].to_owned())
-            .bind(self.content[4].to_owned())
-            .bind(self.content[5].to_owned())
-            .bind(self.content[6].to_owned())
-            .bind(self.content[7].to_owned())
-            .bind(self.content[8].to_owned())
             .execute(&self.connection)
             .await?;
-        Ok(self.content[0].to_owned())
+        Ok(name)
     }
 }
