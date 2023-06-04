@@ -1,7 +1,6 @@
 # agent_listen
 Co-op (SGC Services)
-### WARNING ###
-script went to call the superuser.
+### WARNING ###: script went to call the superuser.
 
 ## Example
 
