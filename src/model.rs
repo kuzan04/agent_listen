@@ -24,7 +24,7 @@ impl FromRow<'_, MySqlRow> for AgentStore {
   }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[allow(non_snake_case)]
 pub struct AgentManage {
   pub agm_id: i32,
@@ -42,7 +42,7 @@ impl FromRow<'_, MySqlRow> for AgentManage {
 }
 impl Default for AgentManage {
     fn default() -> Self {
-        Self { agm_id: -1, agm_name: "unknow".to_string(), code: "unknow".to_string() }
+        Self { agm_id: -1, agm_name: "NULL".to_string(), code: "NULL".to_string() }
     }
 }
 

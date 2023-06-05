@@ -2,9 +2,11 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net;
 use sqlx::{MySqlPool, FromRow};
 
-use crate::module::log0::LogHash;
-use crate::module::file::FileDirectory;
-use crate::module::db::{TestConnect, DatabaseCheck};
+use crate::module::{
+    log0::LogHash,
+    file::FileDirectory,
+    db::{TestConnect, DatabaseCheck}
+};
 
 use crate::model::{AgentStore, AgentManage, AgentHistory};
 
@@ -79,14 +81,14 @@ impl Recevie {
             }
             i += 1
         }
-        if selected.agm_id == -1 && selected.agm_name == *"unknow".to_string() && selected.code == *"unknow".to_string() {
+        if selected == AgentManage::default() {
             Err("Not Found".to_string())
         } else{
             Ok(selected)
         }
     }
 
-    async fn set_history(db: MySqlPool, manager: Vec<AgentManage>, code: String, name: String) -> String {
+    async fn set_history(db: MySqlPool, manager: Vec<AgentManage>, code: String, name: String) { //  -> String
         let env_history = Self::split_string(&dotenv::var("TB_HISTORY").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LISTEN_HISTORY:agm_id".to_string()), ":");
         let history: Vec<AgentHistory> = sqlx::query(
             format!(
@@ -103,7 +105,7 @@ impl Recevie {
         let selected = Self::set_manage(manager, code, name);
         match selected {
             Ok(agm) => {
-                let mut message = String::new();
+                let message = String::new(); //mut
                 let mut i = 0;
                 while i < history.len() {
                     if history[i].agm_id == agm.agm_id {
@@ -111,7 +113,7 @@ impl Recevie {
                             .bind(agm.agm_id)
                             .execute(&db)
                             .await.unwrap();
-                        message = "Success".to_string()
+                        // message = "Success".to_string()
                     }
                     i += 1
                 }
@@ -121,12 +123,13 @@ impl Recevie {
                             .bind(agm.agm_id)
                             .execute(&db)
                             .await.unwrap();
-                        "Success".to_string()
+                        // "Success".to_string()
                     }
-                    _ => "Success".to_string(),
+                    _ => todo!(), //"Success".to_string()
                 }
             },
-            Err(err) => format!("[Error] {} agent client from web alltra", err)
+            Err(_) => todo!()
+                //format!("[Error] {} agent client from web alltra", err)
         }
     }
 
@@ -185,7 +188,8 @@ impl Recevie {
 
                         DatabaseCheck::new(db, from_client, dbc_table, dbc_columns, content);
 
-                        details[1].to_string()
+                        // details[1].to_string()
+                        "Test".to_string()
                     },
                     _ => {
                         "Failed".to_string()
@@ -234,13 +238,11 @@ impl Recevie {
                         let response = Self::split_string(&s, "#");
                         // Get AG_NAME after success.
                         let result = Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()).await;
-                        println!("{}", result);
                         // Set message to response client.
-                        // message = Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
-                        message = "Test".to_string();
-                        if let Err(error) = stream.write_all(message.as_bytes()).await {
-                            println!("Failed to write to stream: {}", error);
-                        }
+                        Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
+                        // if let Err(error) = stream.write_all(message.as_bytes()).await {
+                        //     println!("Failed to write to stream: {}", error);
+                        // }
                     },
                     _ => {
                         message = "Failed unknow type agent. Please check token, .env, or api from alltra again!!".to_string();
@@ -255,7 +257,7 @@ impl Recevie {
             }
         }
 
-        stream.shutdown().await.unwrap();
+        // stream.shutdown().await.unwrap();
     }
 
     pub async fn listen(&self, db: MySqlPool) {
