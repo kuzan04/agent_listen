@@ -1,6 +1,7 @@
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net;
 use sqlx::{MySqlPool, FromRow};
+
 use crate::module::{
     log0::LogHash,
     file::FileDirectory,
@@ -87,7 +88,7 @@ impl Recevie {
         }
     }
 
-    async fn set_history(db: MySqlPool, manager: Vec<AgentManage>, code: String, name: String) { //  -> String 
+    async fn set_history(db: MySqlPool, manager: Vec<AgentManage>, code: String, name: String) -> String { 
         let env_history = Self::split_string(&dotenv::var("TB_HISTORY").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LISTEN_HISTORY:agm_id".to_string()), ":");
         let history: Vec<AgentHistory> = sqlx::query(
             format!(
@@ -104,7 +105,7 @@ impl Recevie {
         let selected = Self::set_manage(manager, code, name);
         match selected {
             Ok(agm) => {
-                let message = String::new(); //mut
+                let mut message = String::new(); // 
                 let mut i = 0;
                 while i < history.len() {
                     if history[i].agm_id == agm.agm_id {
@@ -112,7 +113,7 @@ impl Recevie {
                             .bind(agm.agm_id)
                             .execute(&db)
                             .await.unwrap();
-                        // message = "Success".to_string()
+                        message = "Success".to_string()
                     }
                     i += 1
                 }
@@ -122,12 +123,12 @@ impl Recevie {
                             .bind(agm.agm_id)
                             .execute(&db)
                             .await.unwrap();
-                        // "Success".to_string()
+                        "Success".to_string()
                     }
-                    _ => todo!() //"Success".to_string()
+                    _ => "Success".to_string()
                 }
             },
-            Err(_) => todo!() //format!("[Error] {} agent client from web alltra", err)
+            Err(err) => format!("[Error] {} agent client from web alltra", err)
         }
     }
 
@@ -264,7 +265,7 @@ impl Recevie {
         println!("Server listening on {}:{}", &self.host, &self.port);
 
         loop {
-            if let Ok(sock) = listener.accept().await{
+            if let Ok(sock) = listener.accept().await {
                 let cloned_db = db.clone();
                 tokio::spawn(async move {
                     Self::handle_client(sock.0, cloned_db).await;

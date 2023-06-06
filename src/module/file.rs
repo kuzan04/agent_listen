@@ -46,7 +46,7 @@ impl FileDirectory {
         for i in arr {
             let mut equal_result = i[1..].iter().zip(val.iter()).map(|(a, b)| a == b).collect::<Vec<bool>>();
             equal_result.retain(|&value| value);
-            if equal_result.len() > 2 {
+            if equal_result.len() > 3 {
                 result = true;
             }
         }
@@ -107,7 +107,7 @@ impl FileDirectory {
             )
                 .execute(&self.connection)
                 .await.unwrap();
-        }
+        } 
         self.move_dir().await;
         Ok(name)
     }
