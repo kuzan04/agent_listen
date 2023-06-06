@@ -104,7 +104,7 @@ impl Recevie {
         let selected = Self::set_manage(manager, code, name);
         match selected {
             Ok(agm) => {
-                // let mut message = String::new(); //mut
+                let message = String::new(); //mut
                 let mut i = 0;
                 while i < history.len() {
                     if history[i].agm_id == agm.agm_id {
@@ -127,7 +127,7 @@ impl Recevie {
                     _ => todo!() //"Success".to_string()
                 }
             },
-            Err(err) => todo!() //format!("[Error] {} agent client from web alltra", err)
+            Err(_) => todo!() //format!("[Error] {} agent client from web alltra", err)
         }
     }
 
