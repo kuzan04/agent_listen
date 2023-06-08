@@ -185,9 +185,10 @@ impl Recevie {
                         // Convert message from_client and values
                         let from_client = content.remove(1);
 
-                        DatabaseCheck::new(db, from_client, dbc_table, dbc_columns, content);
+                        DatabaseCheck::new(db, from_client, dbc_table, dbc_columns, content.clone());
 
-                        "Beta".to_string()
+                        // Beta.
+                        content[0].to_string()
                     },
                     _ => {
                         "Failed".to_string()
