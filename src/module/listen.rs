@@ -183,12 +183,11 @@ impl Recevie {
                         let dbc_table = dbc_table_all.pop().unwrap();
                         let mut content = Self::split_string(&details[details.len() - 1], "|||");
                         // Convert message from_client and values
-                        let from_client = content.remove(0);
+                        let from_client = content.remove(1);
 
                         DatabaseCheck::new(db, from_client, dbc_table, dbc_columns, content);
 
-                        // details[1].to_string()
-                        "Test".to_string()
+                        "Beta".to_string()
                     },
                     _ => {
                         "Failed".to_string()
