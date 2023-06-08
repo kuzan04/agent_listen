@@ -89,7 +89,7 @@ impl TestConnect {
                 let mut mix: Vec<Table> = vec![];
                 let tables = self.oracle_query("SELECT table_name FROM user_tables", pool.clone()).await?;
                 for i in tables {
-                    let column = self.oracle_query(format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}'  GROUP BY column_name, column_id ORDER BY column_id;", i).as_str(), pool.clone()).await?;
+                    let column = self.oracle_query(format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}' GROUP BY column_name, column_id ORDER BY column_id", i).as_str(), pool.clone()).await?;
                     mix.push(Table{ name: i, columns: column});
                 }
                 // Not sure, ## Can Force to disconnect. ##
