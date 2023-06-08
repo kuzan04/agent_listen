@@ -4,7 +4,7 @@ use sqlx::{
     Row
 };
 use serde::Serialize;
-use oracle::pool::{PoolBuilder, Pool as OraclePool};
+use oracle::pool::{PoolBuilder, Pool as OraclePool, CloseMode};
 
 #[derive(Debug, Default, Serialize)]
 struct Table {
@@ -76,6 +76,7 @@ impl TestConnect {
         }
     }
 
+    #[allow(unused_must_use)]
     pub async fn oracle(&self) -> Result<String, oracle::Error> {
         //Set Oracle instant client.
         // std::env::set_var("LD_LIBRARY_PATH", "/Users/kuzan04/Desktop/instantclient_19_8/");
@@ -91,6 +92,8 @@ impl TestConnect {
                     let column = self.oracle_query(format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}'", i).as_str(), pool.clone()).await?;
                     mix.push(Table{ name: i, columns: column});
                 }
+                // Not sure, ## Can Force to disconnect. ##
+                pool.close(&CloseMode::Default);
                 Ok(serde_json::to_string(&mix).unwrap())
             }
             Err(e) => Ok(e.to_string())
