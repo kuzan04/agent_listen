@@ -6,6 +6,9 @@ use sqlx::{
 use serde::Serialize;
 use oracle::pool::{PoolBuilder, Pool as OraclePool, CloseMode};
 
+// use test
+use crate::module::test::*;
+
 #[derive(Debug, Default, Serialize)]
 struct Table {
     name: String,
@@ -89,7 +92,12 @@ impl TestConnect {
                 let mut mix: Vec<Table> = vec![];
                 let tables = self.oracle_query("SELECT table_name FROM user_tables", pool.clone()).await?;
                 for i in tables {
-                    let column = self.oracle_query(format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}' GROUP BY column_name, column_id ORDER BY column_id", i).as_str(), pool.clone()).await?;
+                    // let column = self.oracle_query(format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}' GROUP BY column_name, column_id ORDER BY column_id", i).as_str(), pool.clone()).await?;
+                    // function on test only!!
+                    let format_cols = format!("SELECT column_name FROM all_tab_columns WHERE table_name = '{}' GROUP BY column_name, column_id ORDER BY column_id", i);
+                    let format_name = format!("oracle_query#{}", i);
+                    let format_name_static: &'static str = Box::leak(format_name.into_boxed_str());
+                    let column = time_function(|| self.oracle_query(&format_cols, pool.clone()), format_name_static).await?;
                     mix.push(Table{ name: i, columns: column});
                 }
                 // Not sure, ## Can Force to disconnect. ##

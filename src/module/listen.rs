@@ -2,6 +2,8 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net;
 use sqlx::{MySqlPool, FromRow};
 
+use std::time::Duration;
+
 use crate::module::{
     log0::LogHash,
     file::FileDirectory,
@@ -9,6 +11,9 @@ use crate::module::{
 };
 
 use crate::model::{AgentStore, AgentManage, AgentHistory};
+
+// On test
+use crate::module::test::*;
 
 #[derive(Debug)]
 pub struct Recevie {
@@ -30,16 +35,29 @@ impl Recevie {
     async fn test_connect(_type: String, host: String, user: String, passwd: String, database: String) -> String {
         let success: String;
         match _type.parse::<i32>() {
-            Ok(t) => { match t {
+            Ok(t) => { 
+                let to_start = TestConnect::new(host, user, passwd, database);
+                match t {
                     1 => {
-                        if let Ok(res) = TestConnect::new(host, user, passwd, database).mysql().await {
+                //         if let Ok(res) = to_start.mysql().await {
+                //             success = res
+                //         } else {
+                //             success = "Query details table error.".to_string()
+                //         }
+                    // function on test only!!
+                        if let Ok(res) = time_function(|| to_start.mysql(), "test_connect_mysql").await {
                             success = res
                         } else {
                             success = "Query details table error.".to_string()
                         }
                     },
                     0 => {
-                        if let Ok(res) = TestConnect::new(host, user, passwd, database).oracle().await {
+                //         if let Ok(res) = to_start.oracle().await {
+                //             success = res
+                //         } else {
+                //             success = "Query details table error.".to_string()
+                //         }
+                        if let Ok(res) = time_function(|| to_start.oracle(), "test_connect_oracle").await {
                             success = res
                         } else {
                             success = "Query details table error.".to_string()
@@ -89,7 +107,9 @@ impl Recevie {
     }
 
     async fn set_history(db: MySqlPool, manager: Vec<AgentManage>, code: String, name: String) -> String { 
-        let env_history = Self::split_string(&dotenv::var("TB_HISTORY").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LISTEN_HISTORY:agm_id".to_string()), ":");
+        // let env_history = Self::split_string(&dotenv::var("TB_HISTORY").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LISTEN_HISTORY:agm_id".to_string()), ":");
+        // function on test only!!
+        let env_history = time_function(|| Self::split_string(&dotenv::var("TB_HISTORY").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LISTEN_HISTORY:agm_id".to_string()), ":"), "split_string#10");
         let history: Vec<AgentHistory> = sqlx::query(
             format!(
                 "SELECT {} FROM {} GROUP BY {}",
@@ -102,7 +122,9 @@ impl Recevie {
             .into_iter()
             .map(|row| AgentHistory::from_row(&row).unwrap())
             .collect();
-        let selected = Self::set_manage(manager, code, name);
+        // let selected = Self::set_manage(manager, code, name);
+        // function on test only!!
+        let selected = time_function(|| Self::set_manage(manager, code, name), "set_manage");
         match selected {
             Ok(agm) => {
                 let mut message = String::new(); // 
@@ -137,29 +159,63 @@ impl Recevie {
             true => {
                 match details[0].as_str() {
                     "AG1" => {
-                        let mut log0_table_all = Self::split_string(
+                        // let mut log0_table_all = Self::split_string(
+                        //     &dotenv::var("TB_LOG0").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LOG0_HASH:device_name, os_name, path, name_file, total_line, value, value_md5, value_sha1".to_string()),
+                        //     ":"
+                        // );
+                        // let log0_columns = Self::split_string(&log0_table_all.pop().unwrap(), ",");
+                        // let log0_table = log0_table_all.pop().unwrap();
+                        // let content = Self::split_string(&details[details.len() - 1], "|||");
+                        //match LogHash::new(db, log0_table, log0_columns, content).build().await {
+                        //     Ok(s) => s,
+                        //     Err(e) => e.to_string(),
+                        // }
+                        //
+                        // function on test only!!
+                        let mut log0_table_all = time_function(|| Self::split_string(
                             &dotenv::var("TB_LOG0").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_LOG0_HASH:device_name, os_name, path, name_file, total_line, value, value_md5, value_sha1".to_string()),
                             ":"
-                        );
-                        let log0_columns = Self::split_string(&log0_table_all.pop().unwrap(), ",");
+                        ), "split_string#1");
+                        let log0_columns = time_function(|| Self::split_string(&log0_table_all.pop().unwrap(), ","), "split_string#2");
                         let log0_table = log0_table_all.pop().unwrap();
-                        let content = Self::split_string(&details[details.len() - 1], "|||");
-
-                        match LogHash::new(db, log0_table, log0_columns, content).build().await {
+                        let content = time_function(|| Self::split_string(&details[details.len() - 1], "|||"), "split_string#3");
+                        let mut start = LogHash::new(db, log0_table, log0_columns, content);
+                        match time_function(|| start.build(), "main_log0").await {
                             Ok(s) => s,
                             Err(e) => e.to_string(),
                         }
                     },
                     "AG2" => {
-                        let mut file_table_all = Self::split_string(
+                        // let mut file_table_all = Self::split_string(
+                        //     &dotenv::var("TB_FILE").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_FILE_DIR:id, device_name, os_name, path, name_file, size".to_string()),
+                        //     ":"
+                        // );
+                        // let file_columns = Self::split_string(&file_table_all.pop().unwrap(), ",");
+                        // let file_table = file_table_all.pop().unwrap();
+                        // let content = Self::split_string(&details[details.len() - 1], "|||");
+                        //
+                        //match FileDirectory::new(
+                        //     db,
+                        //     file_table, 
+                        //     file_columns, 
+                        //     dotenv::var("SOURCINATION").unwrap_or_else(|_| "/home/ftpuser/".to_string()), 
+                        //     dotenv::var("DESTINATION_LOG").unwrap_or_else(|_| "/home/ftpuser/".to_string()), 
+                        //     dotenv::var("DESTINATION_DOC").unwrap_or_else(|_| "/var/pdpa/agent/".to_string()), 
+                        //     content
+                        // ).build()
+                        //     .await {
+                        //         Ok(s) => s,
+                        //         Err(e) => e.to_string()
+                        //     }
+                        // function on test only!!
+                        let mut file_table_all = time_function(|| Self::split_string(
                             &dotenv::var("TB_FILE").unwrap_or_else(|_| "TB_TR_PDPA_AGENT_FILE_DIR:id, device_name, os_name, path, name_file, size".to_string()),
                             ":"
-                        );
-                        let file_columns = Self::split_string(&file_table_all.pop().unwrap(), ",");
+                        ), "split_string#4");
+                        let file_columns = time_function(|| Self::split_string(&file_table_all.pop().unwrap(), ","), "split_string#5");
                         let file_table = file_table_all.pop().unwrap();
-                        let content = Self::split_string(&details[details.len() - 1], "|||");
-
-                        match FileDirectory::new(
+                        let content = time_function(|| Self::split_string(&details[details.len() - 1], "|||"), "split_string#6");
+                        let mut start = FileDirectory::new(
                             db,
                             file_table, 
                             file_columns, 
@@ -167,21 +223,31 @@ impl Recevie {
                             dotenv::var("DESTINATION_LOG").unwrap_or_else(|_| "/home/ftpuser/".to_string()), 
                             dotenv::var("DESTINATION_DOC").unwrap_or_else(|_| "/var/pdpa/agent/".to_string()), 
                             content
-                        ).build()
-                            .await {
+                        );
+                        match time_function(|| start.build(), "main_file").await {
                                 Ok(s) => s,
                                 Err(e) => e.to_string()
                             }
                     },
                     "AG3" => {
-                        let mut dbc_table_all = Self::split_string(
+                        // let mut dbc_table_all = Self::split_string(
+                        //     &dotenv::var("TB_DB")
+                        //     .unwrap_or_else(|_| "TB_TR_PDPA_AGENT_DATABASE_CHECK:field_1, field_2, field_3, field_4, field_5, field_6, field_7, field_8, field_9, field_0, from_client".to_string()),
+                        //     ":"
+                        // );
+                        // let dbc_columns = Self::split_string(&dbc_table_all.pop().unwrap(), ",");
+                        // let dbc_table = dbc_table_all.pop().unwrap();
+                        // let mut content = Self::split_string(&details[details.len() - 1], "|||");
+                        // 
+                        // function on test only!!
+                        let mut dbc_table_all = time_function(|| Self::split_string(
                             &dotenv::var("TB_DB")
                             .unwrap_or_else(|_| "TB_TR_PDPA_AGENT_DATABASE_CHECK:field_1, field_2, field_3, field_4, field_5, field_6, field_7, field_8, field_9, field_0, from_client".to_string()),
                             ":"
-                        );
-                        let dbc_columns = Self::split_string(&dbc_table_all.pop().unwrap(), ",");
+                        ), "split_string#7");
+                        let dbc_columns = time_function(|| Self::split_string(&dbc_table_all.pop().unwrap(), ","), "split_string#8");
                         let dbc_table = dbc_table_all.pop().unwrap();
-                        let mut content = Self::split_string(&details[details.len() - 1], "|||");
+                        let mut content = time_function(|| Self::split_string(&details[details.len() - 1], "|||"), "split_string#9");
                         // Convert message from_client and values
                         let from_client = content.remove(1);
 
@@ -203,6 +269,9 @@ impl Recevie {
         let mut buffer = [0; 1024];
         match stream.read(&mut buffer).await {
             Ok(bytes_read) => {
+                // Test only!!
+                println!("{}", &buffer[..bytes_read].len());
+                //
                 // Main Taskprocess.
                 let get_response = String::from_utf8_lossy(&buffer[..bytes_read]);
                 // Set message to response to client.
@@ -212,7 +281,8 @@ impl Recevie {
                     s if s.contains('|') && !s.contains('#') => {
                         let conv_test = Self::split_string(&s, "|");
                         // Call check type sql.
-                        message = Self::test_connect(conv_test[0].to_owned(), conv_test[1].to_owned(), conv_test[2].to_owned(), conv_test[3].to_owned(), conv_test[4].to_owned()).await;
+                        // message = Self::test_connect(conv_test[0].to_owned(), conv_test[1].to_owned(), conv_test[2].to_owned(), conv_test[3].to_owned(), conv_test[4].to_owned()).await;
+                        message = time_function(|| Self::test_connect(conv_test[0].to_owned(), conv_test[1].to_owned(), conv_test[2].to_owned(), conv_test[3].to_owned(), conv_test[4].to_owned()), "test_connect").await;
                         if let Err(error) = stream.write_all(message.as_bytes()).await {
                             println!("Failed to write to stream: {}", error);
                         }
@@ -236,9 +306,13 @@ impl Recevie {
                         // Convert message AG # Details to Vector.
                         let response = Self::split_string(&s, "#");
                         // Get AG_NAME after success.
-                        let result = Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()).await;
+                        // let result = Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()).await;
+                        // function on test only!!
+                        let result = time_function(|| Self::main_task(Self::status_store(store, response[0].clone()), response.clone(), db.clone()), "main_task").await;
                         // Set message to response client.
-                        Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
+                        // Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
+                        // function on test only!!
+                        time_function(|| Self::set_history(db.clone(), manager, response[0].to_owned(), result), "set_history").await;
                         // if let Err(error) = stream.write_all(message.as_bytes()).await {
                         //     println!("Failed to write to stream: {}", error);
                         // }
@@ -268,7 +342,16 @@ impl Recevie {
             if let Ok(sock) = listener.accept().await {
                 let cloned_db = db.clone();
                 tokio::spawn(async move {
-                    Self::handle_client(sock.0, cloned_db).await;
+                    // function on test only!!
+                    let (cpu, ram, disk_read, disk_write) = benchmark_env_usage(Duration::from_secs(1));
+                    println!(
+                        "Average CPU Usage: {:.2}%, RAM Usage: {:.2} Mb, Disk Read: {:.2} Mb, Disk Write: {:.2} Mb.", 
+                        cpu, 
+                        ram, 
+                        disk_read, 
+                        disk_write
+                    );
+                    time_function(|| Self::handle_client(sock.0, cloned_db), "handle_client").await;
                 });
             } 
             // else {

@@ -1,5 +1,8 @@
 use sqlx::mysql::MySqlPool;
 
+// use test!!
+use crate::module::test::*;
+
 #[derive(Debug)]
 pub struct LogHash {
     connection: MySqlPool,
@@ -35,7 +38,7 @@ impl LogHash {
 
     pub async fn build(&mut self) -> Result<String, Box<dyn std::error::Error>> {
         let name = self.content.remove(0);
-        match self.check().await {
+        match time_function(|| self.check(), "log0_check").await {
             true => Ok(name),
             false => {
                 let values = self.content.iter().map(|s| format!("\"{}\"", s)).collect::<Vec<String>>().join(",");
