@@ -73,8 +73,8 @@ async fn main() {
     // Main database to use.
     let database_url = format!("mysql://{}:{}@{}:{}/{}",
         dotenv::var("DB_USER").unwrap_or_else(|_| "root".to_string()),
-        dotenv::var("DB_PASSWORD").unwrap_or_else(|_| "root".to_string()),
-        dotenv::var("DB_HOST").unwrap_or_else(|_| "Passw0rd".to_string()),
+        dotenv::var("DB_PASSWORD").unwrap_or_else(|_| "P@ssw0rd".to_string()),
+        dotenv::var("DB_HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
         dotenv::var("DB_DB_PORT").unwrap_or_else(|_| "3306".to_string()),
         dotenv::var("DB_NAME").unwrap_or_else(|_| "DOL_PDPA".to_string()),
     );
