@@ -20,7 +20,6 @@ SOURCINATION= ที่อยู่ของการจัดเก็บไฟ
 DESTINATION_LOG= ที่อยู่หลังจากรับไฟล์ Log from FTP in lister
 DESTINATION_DOC= ที่อยู่หลังจากรับไฟล์ Doc, CSV, XCSV from FTP in lister
 # ========================================================================
-SOURCINATION= ที่อยู่ของการจัดเก็บไฟล์ FTP in listener
 # Table here for client logs hash0
 # ========================================================================
 TB_LOG0= ชื่อ:ตามโดย columns or fields ต่อกันด้วย ',' ไปจนถึงตัวสุดท้ายก็ไม่ต้องใส่
