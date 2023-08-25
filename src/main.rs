@@ -80,7 +80,7 @@ async fn main() {
     );
     // Create connect pool.
     let pool = match MySqlPoolOptions::new()
-        .max_connections(10)
+        .max_connections(100)
         .connect(&database_url)
         .await {
             Ok(pool) => {
