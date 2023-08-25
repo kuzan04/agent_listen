@@ -2,7 +2,8 @@ extern crate dotenv;
 
 use dotenv::dotenv;
 use get_if_addrs::get_if_addrs;
-use sqlx::mysql::MySqlPoolOptions;
+// use sqlx::mysql::MySqlPoolOptions;
+use sqlx::mysql::MySqlPool;
 use std::fs;
 use std::thread;
 use std::time::Duration;
@@ -79,15 +80,23 @@ async fn main() {
         dotenv::var("DB_NAME").unwrap_or_else(|_| "DOL_PDPA".to_string()),
     );
     // Create connect pool.
-    let pool = match MySqlPoolOptions::new()
-        .max_connections(100)
-        .connect(&database_url)
+    // let pool = match MySqlPoolOptions::new()
+    //     .connect(&database_url)
+    //     .await {
+    //         Ok(pool) => {
+    //             pool
+    //         }
+    //         Err(e) => {
+    //             println!("Failed to connect the database: {:?}", e);
+    //             std::process::exit(1);
+    //         }
+    //     };
+    //  Create connect standalone
+    let pool = match MySqlPool::connect(&database_url)
         .await {
-            Ok(pool) => {
-                pool
-            }
-            Err(e) => {
-                println!("Failed to connect the database: {:?}", e);
+            Ok(pool) => pool,
+            Err(err) => {
+                println!("Failed to connect the database: {:?}", err);
                 std::process::exit(1);
             }
         };
