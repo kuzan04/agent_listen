@@ -3,7 +3,7 @@ extern crate dotenv;
 use dotenv::dotenv;
 use get_if_addrs::get_if_addrs;
 // use sqlx::mysql::MySqlPoolOptions;
-use sqlx::mysql::MySqlPool;
+// use sqlx::mysql::MySqlPool;
 use std::fs;
 use std::thread;
 use std::time::Duration;
