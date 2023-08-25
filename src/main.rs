@@ -91,17 +91,8 @@ async fn main() {
     //             std::process::exit(1);
     //         }
     //     };
-    //  Create connect standalone
-    let pool = match MySqlPool::connect(&database_url)
-        .await {
-            Ok(pool) => pool,
-            Err(err) => {
-                println!("Failed to connect the database: {:?}", err);
-                std::process::exit(1);
-            }
-        };
-    // function on test only!!
     
     // Start listener socket.
-    Recevie::new(ip, dotenv::var("PORT").unwrap_or_else(|_| 5050.to_string())).listen(pool).await;
+    // Recevie::new(ip, dotenv::var("PORT").unwrap_or_else(|_| 5050.to_string())).listen(pool).await;
+    Recevie::new(ip, dotenv::var("PORT").unwrap_or_else(|_| 5050.to_string())).listen(database_url).await;
 }

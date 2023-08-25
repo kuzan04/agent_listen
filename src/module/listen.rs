@@ -265,6 +265,7 @@ impl Recevie {
         }
     }
 
+    #[allow(unused_must_use)]
     async fn handle_client(mut stream: net::TcpStream, db: MySqlPool) {
         let mut buffer = [0; 1024];
         match stream.read(&mut buffer).await {
@@ -313,6 +314,8 @@ impl Recevie {
                         // Self::set_history(db.clone(), manager, response[0].to_owned(), result).await;
                         // function on test only!!
                         time_function(|| Self::set_history(db.clone(), manager, response[0].to_owned(), result), "set_history").await;
+                        // shutdown mysql.
+                        db.close();
                         // if let Err(error) = stream.write_all(message.as_bytes()).await {
                         //     println!("Failed to write to stream: {}", error);
                         // }
@@ -333,14 +336,22 @@ impl Recevie {
         // stream.shutdown().await.unwrap();
     }
 
-    pub async fn listen(&self, db: MySqlPool) {
+    // pub async fn listen(&self, db: MySqlPool) {
+    pub async fn listen(&self, db_url: String) {
         let listener = net::TcpListener::bind(format!("{}:{}", &self.host, &self.port)).await.expect("Failed to bind to address");
 
         println!("Server listening on {}:{}", &self.host, &self.port);
 
         loop {
             if let Ok(sock) = listener.accept().await {
-                let cloned_db = db.clone();
+                let pool = match MySqlPool::connect(&db_url)
+                    .await {
+                        Ok(pool) => pool,
+                        Err(err) => {
+                            println!("Failed to connect the database: {:?}", err);
+                            std::process::exit(1);
+                        }
+                    };
                 tokio::spawn(async move {
                     // function on test only!!
                     let (cpu, ram, disk_read, disk_write) = benchmark_env_usage(Duration::from_secs(1));
@@ -351,7 +362,7 @@ impl Recevie {
                         disk_read, 
                         disk_write
                     );
-                    time_function(|| Self::handle_client(sock.0, cloned_db), "handle_client").await;
+                    time_function(|| Self::handle_client(sock.0, pool), "handle_client").await;
                 });
             } 
             // else {
