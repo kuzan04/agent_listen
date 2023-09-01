@@ -14,7 +14,7 @@ use crate::module::listen::Recevie;
 
 
 // Use test only!
-use crate::module::test::*;
+// use crate::module::test::*;
 
 fn set_init() -> String {
     match fs::metadata(".env").is_ok() {
@@ -49,15 +49,15 @@ async fn main() {
     // Get varriable from file .env.
     dotenv().ok();
     // Check file .env
-    // set_init();
+    set_init();
     // function on test only!!!
-    time_function(|| set_init, "set_init");
+    // time_function(|| set_init, "set_init");
     // Check and create tls to use socket.
     let ip: String;
     loop {
-        // let i = get_ip(dotenv::var("INTERFACE").unwrap_or_else(|_| "ens192".to_string()));
+        let i = get_ip(dotenv::var("INTERFACE").unwrap_or_else(|_| "ens192".to_string()));
         // function on test only!!
-        let i = time_function(|| get_ip(dotenv::var("INTERFACE").unwrap_or_else(|_| "ens192".to_string())), "get_ip");
+        // let i = time_function(|| get_ip(dotenv::var("INTERFACE").unwrap_or_else(|_| "ens192".to_string())), "get_ip");
         match i.to_owned().as_str() {
             "None" => {
                 println!("[Warning] Unknow ip from interfaces wait for 15 seconds script rebooting.");

@@ -3,7 +3,7 @@ use std::fs::{read_dir, ReadDir, rename};
 use std::path::Path;
 
 //use on test
-use crate::module::test::*;
+// use crate::module::test::*;
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -87,23 +87,23 @@ impl FileDirectory {
             .await.unwrap()
             .into_iter()
             .map(|row| {
-                // Self::set_query(self.column.clone(), &row)
+                Self::set_query(self.column.clone(), &row)
                 // function on test only!!
-                time_function(|| Self::set_query(self.column.clone(), &row), "file_set_query")
+                // time_function(|| Self::set_query(self.column.clone(), &row), "file_set_query")
             })
             .collect();
         let values = self.content.clone().iter().map(|s| format!("\"{}\"", s)).collect::<Vec<String>>().join(", ");
         let files = read_dir(&self.directory).expect("Failed to read directory!");
         // Check result query dir/file == [] and if result query dir/file > 0
         // and check result == value if true = false , false = true
-        // if query_dir.is_empty() || !Self::find_match(query_dir, self.content.clone()) {
+        if query_dir.is_empty() || !Self::find_match(query_dir, self.content.clone()) {
         // function on test only!!
-        if query_dir.is_empty() || time_function(|| !Self::find_match(query_dir, self.content.clone()), "file_find_match") {
+        // if query_dir.is_empty() || time_function(|| !Self::find_match(query_dir, self.content.clone()), "file_find_match") {
             sqlx::query(format!("INSERT INTO {} ({}) VALUES ({})", self.table, &self.column[1..].join(", "), values).as_str())
                 .fetch_all(&self.connection)
                 .await.unwrap();
-        // } else if Self::reverse_name(files, self.content[self.content.len() - 2].to_string()) {
-        } else if time_function(|| Self::reverse_name(files, self.content[self.content.len() - 2].to_string()), "file_reverse_name") {
+        } else if Self::reverse_name(files, self.content[self.content.len() - 2].to_string()) {
+        // } else if time_function(|| Self::reverse_name(files, self.content[self.content.len() - 2].to_string()), "file_reverse_name") {
             sqlx::query(
                 format!("UPDATE {} SET {} = {}, _get = NOW() WHERE {} = \"{}\"",
                     self.table,
@@ -116,8 +116,8 @@ impl FileDirectory {
                 .execute(&self.connection)
                 .await.unwrap();
         } 
-        // self.move_dir().await;
-        time_function(|| self.move_dir(), "move_dir").await;
+        self.move_dir().await;
+        // time_function(|| self.move_dir(), "move_dir").await;
         Ok(name)
     }
 
